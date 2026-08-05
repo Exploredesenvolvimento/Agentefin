@@ -1,0 +1,1104 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>agendefin · Portal Financeiro EXPLORE</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root {
+    --bordo: #612B4A; --bordo-escuro: #4A2038; --ouro: #C9A96E; --ouro-claro: #E4D4B8;
+    --fundo: #FAF8F5; --papel: #FFFFFF; --texto: #2B2320; --texto-suave: #746A63;
+    --linha: #E8E1D8; --erro: #A23B3B; --sucesso: #3B6E4E; --pendente: #B8863B;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--fundo); color: var(--texto); font-family: Calibri, 'Segoe UI', sans-serif; min-height: 100vh; }
+  h1, h2, h3 { font-family: Georgia, 'Times New Roman', serif; font-weight: normal; margin: 0; }
+
+  .topo { background: var(--bordo); color: var(--ouro-claro); padding: 24px 32px; display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+  .topo h1 { color: #FFFFFF; font-size: 1.5rem; letter-spacing: 0.02em; }
+  .topo .subtitulo { font-size: 0.82rem; color: var(--ouro); letter-spacing: 0.04em; text-transform: uppercase; margin-top: 4px; }
+  .topo .sessao { display: flex; align-items: center; gap: 14px; font-size: 0.85rem; }
+  .topo button.sair { background: transparent; border: 1px solid var(--ouro); color: var(--ouro-claro); padding: 6px 14px; border-radius: 3px; cursor: pointer; font-family: Calibri, sans-serif; }
+  .topo button.sair:hover { background: rgba(255,255,255,0.08); }
+
+  .nav-abas { background: var(--bordo-escuro); display: flex; padding: 0 32px; overflow-x: auto; }
+  .nav-abas button {
+    background: none; border: none; color: var(--ouro-claro); opacity: 0.6; padding: 14px 18px;
+    font-family: Calibri, sans-serif; font-size: 0.88rem; cursor: pointer; border-bottom: 3px solid transparent;
+    white-space: nowrap;
+  }
+  .nav-abas button.ativa { opacity: 1; border-bottom-color: var(--ouro); font-weight: bold; }
+  .nav-abas button:hover { opacity: 1; }
+
+  .container { max-width: 1040px; margin: 0 auto; padding: 32px 24px 64px; }
+  .secao { display: none; }
+  .secao.ativa { display: block; }
+
+  .login-wrap { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 24px; }
+  .login-card { background: var(--papel); border: 1px solid var(--linha); border-radius: 6px; padding: 40px; width: 100%; max-width: 400px; box-shadow: 0 4px 24px rgba(74,32,56,0.08); }
+  .login-card .marca { text-align: center; margin-bottom: 28px; }
+  .login-card .marca .linha-ouro { width: 40px; height: 2px; background: var(--ouro); margin: 10px auto 0; }
+  .login-card h1 { color: var(--bordo); font-size: 1.5rem; }
+  .login-card p.legenda { color: var(--texto-suave); font-size: 0.85rem; margin-top: 6px; }
+  .abas { display: flex; margin-bottom: 22px; border-bottom: 1px solid var(--linha); }
+  .abas button { flex: 1; background: none; border: none; padding: 10px; font-family: Calibri, sans-serif; font-size: 0.9rem; color: var(--texto-suave); cursor: pointer; border-bottom: 2px solid transparent; }
+  .abas button.ativa { color: var(--bordo); border-bottom-color: var(--bordo); font-weight: bold; }
+
+  label { display: block; font-size: 0.82rem; color: var(--texto-suave); margin-bottom: 5px; margin-top: 14px; }
+  input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--linha); border-radius: 4px; font-family: Calibri, sans-serif; font-size: 0.95rem; background: var(--papel); color: var(--texto); }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--ouro); box-shadow: 0 0 0 3px rgba(201,169,110,0.2); }
+
+  button.principal { background: var(--bordo); color: #FFFFFF; border: none; padding: 12px 20px; border-radius: 4px; font-family: Calibri, sans-serif; font-size: 0.95rem; cursor: pointer; letter-spacing: 0.02em; }
+  button.principal:hover { background: var(--bordo-escuro); }
+  button.principal:disabled { opacity: 0.6; cursor: not-allowed; }
+  button.principal.largo { width: 100%; margin-top: 22px; }
+  button.secundaria { background: var(--papel); color: var(--bordo); border: 1px solid var(--bordo); padding: 12px 20px; border-radius: 4px; font-family: Calibri, sans-serif; font-size: 0.95rem; cursor: pointer; }
+
+  .msg { font-size: 0.85rem; margin-top: 12px; padding: 10px 12px; border-radius: 4px; }
+  .msg.erro { background: #FBEAEA; color: var(--erro); }
+  .msg.sucesso { background: #E9F3EC; color: var(--sucesso); }
+  .msg.info { background: #F5F0E6; color: var(--pendente); }
+
+  .card { background: var(--papel); border: 1px solid var(--linha); border-radius: 6px; padding: 28px 32px; margin-bottom: 28px; }
+  .card h2 { color: var(--bordo); font-size: 1.2rem; margin-bottom: 4px; }
+  .card p.legenda { color: var(--texto-suave); font-size: 0.83rem; margin-bottom: 4px; }
+
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .kpi { background: var(--papel); border: 1px solid var(--linha); border-radius: 6px; padding: 20px; }
+  .kpi .rotulo { font-size: 0.72rem; color: var(--texto-suave); text-transform: uppercase; letter-spacing: 0.04em; }
+  .kpi .valor { font-family: Georgia, serif; font-size: 1.5rem; margin-top: 6px; }
+  .kpi.saldo .valor.positivo { color: var(--sucesso); }
+  .kpi.saldo .valor.negativo { color: var(--erro); }
+  .kpi.receita .valor { color: var(--sucesso); }
+  .kpi.despesa .valor { color: var(--erro); }
+  .kpi.manual .valor { color: var(--pendente); }
+
+  .barra-linha { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .barra-linha .nome { width: 190px; font-size: 0.85rem; flex-shrink: 0; }
+  .barra-linha .trilha { flex: 1; background: var(--fundo); border-radius: 3px; height: 22px; position: relative; overflow: hidden; }
+  .barra-linha .preenchimento { background: var(--bordo); height: 100%; border-radius: 3px 0 0 3px; transition: width 0.4s ease; }
+  .barra-linha .valor { width: 110px; text-align: right; font-size: 0.85rem; flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+  .grafico-mensal { display: flex; align-items: flex-end; gap: 18px; height: 220px; padding: 0 8px; border-bottom: 1px solid var(--linha); }
+  .mes-coluna { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+  .mes-barras { display: flex; align-items: flex-end; gap: 3px; height: 180px; }
+  .mes-barras .barra { width: 16px; border-radius: 2px 2px 0 0; }
+  .mes-barras .barra.receita { background: var(--sucesso); }
+  .mes-barras .barra.despesa { background: var(--erro); }
+  .mes-rotulo { font-size: 0.72rem; color: var(--texto-suave); margin-top: 6px; text-transform: capitalize; }
+  .legenda-grafico { display: flex; gap: 18px; margin-top: 14px; font-size: 0.78rem; color: var(--texto-suave); }
+  .legenda-grafico span { display: inline-flex; align-items: center; gap: 6px; }
+  .ponto { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .ponto.receita { background: var(--sucesso); }
+  .ponto.despesa { background: var(--erro); }
+
+  .anel-wrap { display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+  .anel { width: 130px; height: 130px; border-radius: 50%; flex-shrink: 0; }
+  .anel-legenda .item { display: flex; align-items: center; gap: 8px; font-size: 0.88rem; margin-bottom: 8px; }
+  .anel-legenda .ponto { width: 12px; height: 12px; border-radius: 50%; }
+  .anel-legenda .ponto.automatico { background: var(--bordo); }
+  .anel-legenda .ponto.manual { background: var(--ouro); }
+
+  .tipo-toggle { display: flex; gap: 8px; margin-top: 14px; }
+  .tipo-toggle button { flex: 1; padding: 10px; border: 1px solid var(--linha); background: var(--fundo); border-radius: 4px; cursor: pointer; font-family: Calibri, sans-serif; color: var(--texto-suave); }
+  .tipo-toggle button.selecionada.receita { background: #E9F3EC; border-color: var(--sucesso); color: var(--sucesso); font-weight: bold; }
+  .tipo-toggle button.selecionada.despesa { background: #FBEAEA; border-color: var(--erro); color: var(--erro); font-weight: bold; }
+
+  .linha-dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .categorias-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
+  .aviso-teto { font-size: 0.8rem; color: var(--pendente); background: #F5F0E6; padding: 8px 12px; border-radius: 4px; margin-top: 14px; display: none; }
+
+  .zona-upload { border: 2px dashed var(--linha); border-radius: 6px; padding: 32px; text-align: center; cursor: pointer; margin-top: 14px; color: var(--texto-suave); transition: border-color 0.15s; }
+  .zona-upload:hover, .zona-upload.arrastando { border-color: var(--ouro); background: #FDFBF7; }
+  .zona-upload strong { color: var(--bordo); }
+  .previa { display: flex; gap: 16px; align-items: flex-start; margin-top: 14px; }
+  .previa img { max-width: 160px; max-height: 200px; border-radius: 4px; border: 1px solid var(--linha); }
+  .previa .info-arquivo { font-size: 0.85rem; color: var(--texto-suave); }
+  .previa .info-arquivo strong { color: var(--texto); display: block; margin-bottom: 4px; }
+  .selo-ia { display: inline-flex; align-items: center; gap: 6px; background: var(--ouro-claro); color: var(--bordo-escuro); padding: 4px 12px; border-radius: 12px; font-size: 0.78rem; margin-top: 14px; }
+  .selo-formato { display: inline-flex; gap: 6px; margin-top: 14px; flex-wrap: wrap; }
+  .selo-formato span { font-size: 0.75rem; padding: 4px 10px; border-radius: 10px; background: var(--fundo); border: 1px solid var(--linha); color: var(--texto-suave); }
+  .selo-formato span.recomendado { background: #E9F3EC; border-color: var(--sucesso); color: var(--sucesso); }
+  .mapeamento { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-top: 14px; }
+  .resumo-conciliacao { display: flex; gap: 24px; margin-top: 18px; flex-wrap: wrap; }
+  .resumo-item { font-size: 0.85rem; }
+  .resumo-item strong { display: block; font-size: 1.4rem; font-family: Georgia, serif; }
+  .resumo-item.ok strong { color: var(--sucesso); }
+  .resumo-item.pendente strong { color: var(--pendente); }
+
+  .painel-status { border-radius: 4px; padding: 12px 14px; margin-top: 18px; font-size: 0.85rem; }
+  .painel-status.confirmado { background: #E9F3EC; color: var(--sucesso); }
+  .painel-status.pendente { background: #F5F0E6; color: var(--pendente); }
+  .painel-status .motivo { margin-top: 4px; opacity: 0.85; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+  th { text-align: left; color: var(--texto-suave); font-weight: normal; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; padding: 8px 10px; border-bottom: 1px solid var(--linha); }
+  td { padding: 10px; border-bottom: 1px solid var(--linha); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  .tag { display: inline-block; padding: 3px 9px; border-radius: 10px; font-size: 0.72rem; }
+  .tag.confirmado { background: #E9F3EC; color: var(--sucesso); }
+  .tag.pendente_revisao { background: #F5F0E6; color: var(--pendente); }
+  .tag.conciliado { background: #E9F3EC; color: var(--sucesso); }
+  .tag.sem_correspondencia { background: #F5F0E6; color: var(--pendente); }
+  .tag.divergente { background: #FBEAEA; color: var(--erro); }
+  .link-ver { color: var(--bordo); cursor: pointer; text-decoration: underline; font-size: 0.8rem; }
+  .motivo { font-size: 0.78rem; color: var(--texto-suave); }
+  .acoes { display: flex; gap: 8px; }
+  .acoes button { border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.78rem; cursor: pointer; font-family: Calibri, sans-serif; }
+  .acoes button.confirmar { background: #E9F3EC; color: var(--sucesso); }
+  .acoes button.rejeitar { background: #FBEAEA; color: var(--erro); }
+  .valor-despesa { color: var(--erro); }
+  .valor-receita { color: var(--sucesso); }
+  .vazio { text-align: center; color: var(--texto-suave); padding: 24px; font-size: 0.85rem; }
+
+  @media (max-width: 800px) { .kpis { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) {
+    .linha-dupla, .categorias-grid, .mapeamento { grid-template-columns: 1fr; }
+    .card { padding: 20px; }
+    .barra-linha .nome { width: 110px; font-size: 0.78rem; }
+    .previa { flex-direction: column; }
+    .anel-wrap { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div id="tela-login" class="login-wrap">
+  <div class="login-card">
+    <div class="marca"><h1>agendefin</h1><p class="legenda">Portal Financeiro · EXPLORE</p><div class="linha-ouro"></div></div>
+    <div class="abas">
+      <button id="aba-entrar" class="ativa" onclick="mudarAbaLogin('entrar')">Entrar</button>
+      <button id="aba-criar" onclick="mudarAbaLogin('criar')">Criar acesso</button>
+    </div>
+    <div>
+      <label>E-mail</label>
+      <input type="email" id="login-email" placeholder="voce@explore.com.br">
+      <label>Senha</label>
+      <input type="password" id="login-senha" placeholder="Mínimo 6 caracteres">
+      <button class="principal largo" id="btn-login" onclick="autenticar()">Entrar</button>
+      <div id="login-msg"></div>
+    </div>
+  </div>
+</div>
+
+<div id="app" style="display:none;">
+  <div class="topo">
+    <div><h1>agendefin</h1><div class="subtitulo">Portal Financeiro · EXPLORE</div></div>
+    <div class="sessao"><span id="usuario-email"></span><button class="sair" onclick="sair()">Sair</button></div>
+  </div>
+
+  <div class="nav-abas">
+    <button id="nav-dashboard" class="ativa" onclick="mudarTab('dashboard')">Dashboard</button>
+    <button id="nav-manual" onclick="mudarTab('manual')">Lançamento Manual</button>
+    <button id="nav-comprovante" onclick="mudarTab('comprovante')">Ler Comprovante</button>
+    <button id="nav-extrato" onclick="mudarTab('extrato')">Extrato Bancário</button>
+  </div>
+
+  <div class="container">
+
+    <!-- ===================== DASHBOARD ===================== -->
+    <div id="secao-dashboard" class="secao ativa">
+      <div class="kpis">
+        <div class="kpi saldo"><div class="rotulo">Saldo</div><div class="valor" id="kpi-saldo">—</div></div>
+        <div class="kpi receita"><div class="rotulo">Receitas</div><div class="valor" id="kpi-receita">—</div></div>
+        <div class="kpi despesa"><div class="rotulo">Despesas</div><div class="valor" id="kpi-despesa">—</div></div>
+        <div class="kpi manual"><div class="rotulo">% Lançado Manualmente</div><div class="valor" id="kpi-manual">—</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Fila de pendências</h2>
+        <p class="legenda">Lançamentos travados por valor acima do teto, categoria não identificada, ou fornecedor novo.</p>
+        <div id="tabela-pendencias"><div class="vazio">Carregando…</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Despesas por grupo</h2>
+        <p class="legenda">Lançamentos confirmados, agrupados no nível mais alto do plano de contas.</p>
+        <div id="grafico-categorias"><div class="vazio">Carregando…</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Evolução mensal</h2>
+        <p class="legenda">Receita e despesa confirmadas, últimos 6 meses com movimento.</p>
+        <div id="grafico-mensal"><div class="vazio">Carregando…</div></div>
+      </div>
+
+      <div class="card">
+        <h2>Origem dos lançamentos</h2>
+        <p class="legenda">Automático (comprovante + extrato) contra o que ainda depende de digitação manual.</p>
+        <div id="grafico-origem"><div class="vazio">Carregando…</div></div>
+      </div>
+    </div>
+
+    <!-- ===================== LANÇAMENTO MANUAL ===================== -->
+    <div id="secao-manual" class="secao">
+      <div class="card">
+        <h2>Novo lançamento manual</h2>
+        <p class="legenda">Para quando não há comprovante.</p>
+
+        <div class="tipo-toggle">
+          <button id="manual-btn-despesa" class="selecionada despesa" onclick="selecionarTipoManual('despesa')">Despesa</button>
+          <button id="manual-btn-receita" class="receita" onclick="selecionarTipoManual('receita')">Receita</button>
+        </div>
+
+        <div class="linha-dupla">
+          <div><label>Data</label><input type="date" id="manual-f-data"></div>
+          <div><label>Valor (R$)</label><input type="number" id="manual-f-valor" step="0.01" min="0" placeholder="0,00"></div>
+        </div>
+        <label>Fornecedor / Cliente</label>
+        <input type="text" id="manual-f-fornecedor">
+        <label>Descrição (opcional)</label>
+        <textarea id="manual-f-descricao" rows="2"></textarea>
+
+        <div class="categorias-grid">
+          <div><label>Grupo</label><select id="manual-sel-grupo" onchange="carregarFilhos('manual', 1)"><option value="">Selecione…</option></select></div>
+          <div><label>Categoria</label><select id="manual-sel-categoria" onchange="carregarFilhos('manual', 2)" disabled><option value="">—</option></select></div>
+          <div><label>Subcategoria</label><select id="manual-sel-subcategoria" onchange="carregarFilhos('manual', 3)" disabled><option value="">—</option></select></div>
+          <div><label>Item</label><select id="manual-sel-item" disabled><option value="">—</option></select></div>
+        </div>
+
+        <div class="aviso-teto" id="manual-aviso-teto">Valor acima de R$ 1.000. Como é lançamento seu, entra confirmado mesmo assim.</div>
+
+        <button class="principal largo" id="manual-btn-salvar" onclick="salvarLancamentoManual()">Lançar</button>
+        <div id="manual-form-msg"></div>
+      </div>
+
+      <div class="card">
+        <h2>Últimos lançamentos manuais</h2>
+        <div id="manual-lista"><div class="vazio">Carregando…</div></div>
+      </div>
+    </div>
+
+    <!-- ===================== LEITURA DE COMPROVANTE ===================== -->
+    <div id="secao-comprovante" class="secao">
+      <div class="card">
+        <h2>Ler comprovante</h2>
+        <p class="legenda">Envie uma foto ou PDF. A IA lê e sugere o lançamento, você confere antes de salvar.</p>
+
+        <div class="zona-upload" id="comp-zona-upload" onclick="document.getElementById('comp-input-arquivo').click()">
+          <strong>Clique para escolher</strong> ou arraste a imagem/PDF aqui
+          <input type="file" id="comp-input-arquivo" accept="image/*,application/pdf" style="display:none">
+        </div>
+        <div id="comp-previa-arquivo"></div>
+        <button class="principal largo" id="comp-btn-analisar" style="display:none" onclick="analisarComprovante()">Analisar com IA</button>
+        <div id="comp-analise-msg"></div>
+
+        <div id="comp-bloco-resultado" style="display:none">
+          <div class="selo-ia">✦ Sugerido pela IA — confira antes de salvar</div>
+          <div class="linha-dupla">
+            <div><label>Data</label><input type="date" id="comp-f-data"></div>
+            <div><label>Valor (R$)</label><input type="number" id="comp-f-valor" step="0.01" min="0"></div>
+          </div>
+          <label>Fornecedor</label><input type="text" id="comp-f-fornecedor">
+          <label>Descrição</label><textarea id="comp-f-descricao" rows="2"></textarea>
+
+          <div class="categorias-grid">
+            <div><label>Grupo</label><select id="comp-sel-grupo" onchange="carregarFilhos('comp', 1)"><option value="">Selecione…</option></select></div>
+            <div><label>Categoria</label><select id="comp-sel-categoria" onchange="carregarFilhos('comp', 2)" disabled><option value="">—</option></select></div>
+            <div><label>Subcategoria</label><select id="comp-sel-subcategoria" onchange="carregarFilhos('comp', 3)" disabled><option value="">—</option></select></div>
+            <div><label>Item</label><select id="comp-sel-item" disabled><option value="">—</option></select></div>
+          </div>
+
+          <div id="comp-painel-status" class="painel-status"></div>
+
+          <button class="principal largo" id="comp-btn-salvar" onclick="salvarLancamentoComprovante()">Confirmar e salvar</button>
+          <button class="secundaria" style="width:100%; margin-top:10px" onclick="reiniciarComprovante()">Cancelar e recomeçar</button>
+          <div id="comp-salvar-msg"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Últimos comprovantes lançados</h2>
+        <div id="comp-lista"><div class="vazio">Carregando…</div></div>
+      </div>
+    </div>
+
+    <!-- ===================== EXTRATO BANCÁRIO ===================== -->
+    <div id="secao-extrato" class="secao">
+      <div class="card">
+        <h2>Importar extrato bancário</h2>
+        <p class="legenda">Compara o extrato do banco com os lançamentos já registrados e marca o que bate.</p>
+        <div class="selo-formato">
+          <span class="recomendado">OFX — recomendado</span>
+          <span>CSV — precisa mapear colunas</span>
+          <span>PDF — lido por IA, sempre revisar</span>
+        </div>
+        <div class="zona-upload" id="ext-zona-upload" onclick="document.getElementById('ext-input-arquivo').click()">
+          <strong>Clique para escolher</strong> ou arraste o arquivo aqui (.ofx, .csv ou .pdf)
+          <input type="file" id="ext-input-arquivo" accept=".ofx,.csv,application/pdf" style="display:none">
+        </div>
+        <div id="ext-msg-upload"></div>
+
+        <div id="ext-bloco-mapeamento-csv" style="display:none">
+          <p class="legenda" style="margin-top:18px">Diga qual coluna é qual:</p>
+          <div class="mapeamento">
+            <div><label>Coluna da data</label><select id="ext-map-data"></select></div>
+            <div><label>Coluna do valor</label><select id="ext-map-valor"></select></div>
+            <div><label>Coluna da descrição</label><select id="ext-map-descricao"></select></div>
+          </div>
+          <button class="principal" style="margin-top:16px" onclick="confirmarMapeamentoCsv()">Processar CSV</button>
+        </div>
+      </div>
+
+      <div class="card" id="ext-card-previa" style="display:none">
+        <h2>Prévia antes de conciliar</h2>
+        <p class="legenda" id="ext-contagem-linhas"></p>
+        <div id="ext-tabela-previa"></div>
+        <div style="margin-top:18px; display:flex; gap:12px;">
+          <button class="principal" id="ext-btn-conciliar" onclick="conciliarTudo()">Conciliar com os lançamentos</button>
+          <button class="secundaria" onclick="reiniciarExtrato()">Cancelar</button>
+        </div>
+        <div id="ext-conciliar-msg"></div>
+      </div>
+
+      <div class="card" id="ext-card-resultado" style="display:none">
+        <h2>Resultado da conciliação</h2>
+        <div class="resumo-conciliacao">
+          <div class="resumo-item ok"><strong id="ext-qtd-conciliado">0</strong>Conciliados</div>
+          <div class="resumo-item pendente"><strong id="ext-qtd-pendente">0</strong>Sem correspondência</div>
+        </div>
+        <div id="ext-tabela-resultado" style="margin-top:18px"></div>
+      </div>
+
+      <div class="card">
+        <h2>Últimas importações</h2>
+        <div id="ext-lista"><div class="vazio">Carregando…</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://mmlgamfgvxkuyqksvwwh.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tbGdhbWZndnhrdXlxa3N2d3doIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU4NzQ1NDIsImV4cCI6MjEwMTQ1MDU0Mn0.gJNvZZo3zTHTRVwaGGyphvZRfjITLiYksGmXtXbnyCc';
+  const TETO_REVISAO = 1000;
+
+  const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  let abaLoginAtual = 'entrar';
+  let todasCategorias = [];
+  let mapaCategorias = {};
+
+  // arquivo/estado de comprovante
+  let arquivoComprovante = null;
+  let resultadoIA = null;
+
+  // arquivo/estado de extrato
+  let linhasParaConciliar = [];
+  let formatoAtual = null;
+  let csvBruto = null;
+
+  // ================= LOGIN =================
+  function mudarAbaLogin(aba) {
+    abaLoginAtual = aba;
+    document.getElementById('aba-entrar').classList.toggle('ativa', aba === 'entrar');
+    document.getElementById('aba-criar').classList.toggle('ativa', aba === 'criar');
+    document.getElementById('btn-login').textContent = aba === 'entrar' ? 'Entrar' : 'Criar acesso';
+    document.getElementById('login-msg').innerHTML = '';
+  }
+
+  async function autenticar() {
+    const email = document.getElementById('login-email').value.trim();
+    const senha = document.getElementById('login-senha').value;
+    const msgBox = document.getElementById('login-msg');
+    msgBox.innerHTML = '';
+    if (!email || senha.length < 6) { msgBox.innerHTML = '<div class="msg erro">Preencha um e-mail válido e senha com 6+ caracteres.</div>'; return; }
+    if (abaLoginAtual === 'entrar') {
+      const { error } = await sb.auth.signInWithPassword({ email, password: senha });
+      if (error) { msgBox.innerHTML = `<div class="msg erro">${error.message}</div>`; return; }
+      iniciarApp();
+    } else {
+      const { error } = await sb.auth.signUp({ email, password: senha });
+      if (error) { msgBox.innerHTML = `<div class="msg erro">${error.message}</div>`; return; }
+      msgBox.innerHTML = '<div class="msg info">Acesso criado. Confirme por e-mail se exigido, depois entre pela aba "Entrar".</div>';
+    }
+  }
+
+  async function sair() {
+    await sb.auth.signOut();
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('tela-login').style.display = 'flex';
+  }
+
+  async function iniciarApp() {
+    const { data: { user } } = await sb.auth.getUser();
+    if (!user) return;
+    document.getElementById('tela-login').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    document.getElementById('usuario-email').textContent = user.email;
+    document.getElementById('manual-f-data').valueAsDate = new Date();
+    await carregarCategorias();
+    selecionarTipoManual('despesa');
+    await recarregarTudo();
+  }
+
+  async function carregarCategorias() {
+    const { data } = await sb.from('categorias').select('*').eq('ativo', true);
+    todasCategorias = data || [];
+    todasCategorias.forEach(c => mapaCategorias[c.id] = c);
+  }
+
+  async function recarregarTudo() {
+    await Promise.all([
+      carregarDashboard(),
+      carregarLancamentosManual(),
+      carregarLancamentosComprovante(),
+      carregarExtratosRecentes(),
+    ]);
+  }
+
+  // ================= NAVEGAÇÃO POR ABAS =================
+  function mudarTab(nome) {
+    ['dashboard', 'manual', 'comprovante', 'extrato'].forEach(n => {
+      document.getElementById('secao-' + n).classList.toggle('ativa', n === nome);
+      document.getElementById('nav-' + n).classList.toggle('ativa', n === nome);
+    });
+    if (nome === 'dashboard') carregarDashboard();
+  }
+
+  // ================= CASCATA DE CATEGORIAS (genérica, usada por manual e comprovante) =================
+  function montarSelectGrupo(prefixo, tipo) {
+    const sel = document.getElementById(`${prefixo}-sel-grupo`);
+    sel.innerHTML = '<option value="">Selecione…</option>';
+    todasCategorias.filter(c => c.nivel === 1 && c.tipo === tipo).sort((a,b) => a.nome.localeCompare(b.nome))
+      .forEach(c => sel.innerHTML += `<option value="${c.id}">${c.nome}</option>`);
+    ['sel-categoria','sel-subcategoria','sel-item'].forEach(suf => {
+      const el = document.getElementById(`${prefixo}-${suf}`);
+      el.innerHTML = '<option value="">—</option>';
+      el.disabled = true;
+    });
+  }
+
+  function carregarFilhos(prefixo, nivelPai) {
+    const mapa = { 1: ['sel-grupo','sel-categoria'], 2: ['sel-categoria','sel-subcategoria'], 3: ['sel-subcategoria','sel-item'] };
+    const [sufPai, sufFilho] = mapa[nivelPai];
+    const paiId = document.getElementById(`${prefixo}-${sufPai}`).value;
+    const selFilho = document.getElementById(`${prefixo}-${sufFilho}`);
+    selFilho.innerHTML = '<option value="">—</option>';
+
+    if (sufFilho === 'sel-categoria') {
+      document.getElementById(`${prefixo}-sel-subcategoria`).innerHTML = '<option value="">—</option>';
+      document.getElementById(`${prefixo}-sel-subcategoria`).disabled = true;
+      document.getElementById(`${prefixo}-sel-item`).innerHTML = '<option value="">—</option>';
+      document.getElementById(`${prefixo}-sel-item`).disabled = true;
+    }
+    if (sufFilho === 'sel-subcategoria') {
+      document.getElementById(`${prefixo}-sel-item`).innerHTML = '<option value="">—</option>';
+      document.getElementById(`${prefixo}-sel-item`).disabled = true;
+    }
+
+    if (prefixo === 'comp') atualizarPainelStatusComprovante();
+    if (!paiId) { selFilho.disabled = true; return; }
+
+    const filhos = todasCategorias.filter(c => c.categoria_pai_id === paiId).sort((a,b) => a.nome.localeCompare(b.nome));
+    if (filhos.length === 0) { selFilho.disabled = true; return; }
+    filhos.forEach(c => selFilho.innerHTML += `<option value="${c.id}">${c.nome}</option>`);
+    selFilho.disabled = false;
+  }
+
+  function categoriaFinalSelecionada(prefixo) {
+    return document.getElementById(`${prefixo}-sel-item`).value ||
+           document.getElementById(`${prefixo}-sel-subcategoria`).value ||
+           document.getElementById(`${prefixo}-sel-categoria`).value ||
+           document.getElementById(`${prefixo}-sel-grupo`).value || null;
+  }
+
+  function selecionarCadeiaCategoria(prefixo, categoria) {
+    const cadeia = [];
+    let atual = categoria;
+    while (atual) { cadeia.unshift(atual); atual = atual.categoria_pai_id ? mapaCategorias[atual.categoria_pai_id] : null; }
+    const sufixos = ['sel-grupo', 'sel-categoria', 'sel-subcategoria', 'sel-item'];
+    cadeia.forEach((nivel, i) => {
+      const sel = document.getElementById(`${prefixo}-${sufixos[i]}`);
+      if (i > 0) carregarFilhos(prefixo, i);
+      sel.value = nivel.id;
+    });
+  }
+
+  function resolverGrupo(categoriaId) {
+    let atual = mapaCategorias[categoriaId];
+    while (atual && atual.nivel > 1) atual = mapaCategorias[atual.categoria_pai_id];
+    return atual ? atual.nome : 'Não Classificado';
+  }
+
+  function tipoDaCategoria(categoriaId) {
+    const c = mapaCategorias[categoriaId];
+    return c ? c.tipo : null;
+  }
+
+  function formatarMoeda(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
+
+  function arquivoParaBase64(file) {
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result.split(',')[1]);
+      r.onerror = () => reject(new Error('Falha ao ler arquivo'));
+      r.readAsDataURL(file);
+    });
+  }
+
+  // ================= DASHBOARD =================
+  async function carregarDashboard() {
+    const { data: lancamentos, error } = await sb.from('lancamentos')
+      .select('id, data_lancamento, valor, fornecedor, origem, status, motivo_pendencia, categoria_id, criado_em');
+    if (error) { console.error(error); return; }
+    renderizarKpis(lancamentos);
+    renderizarPendencias(lancamentos);
+    renderizarCategoriasDash(lancamentos);
+    renderizarMensal(lancamentos);
+    renderizarOrigem(lancamentos);
+  }
+
+  function renderizarKpis(lancamentos) {
+    const validos = lancamentos.filter(l => l.status !== 'rejeitado');
+    const totalReceita = validos.filter(l => tipoDaCategoria(l.categoria_id) === 'receita').reduce((s, l) => s + Number(l.valor), 0);
+    const totalDespesa = validos.filter(l => tipoDaCategoria(l.categoria_id) === 'despesa').reduce((s, l) => s + Number(l.valor), 0);
+    const saldo = totalReceita - totalDespesa;
+    const percManual = validos.length ? (validos.filter(l => l.origem === 'manual').length / validos.length * 100) : 0;
+    const elSaldo = document.getElementById('kpi-saldo');
+    elSaldo.textContent = formatarMoeda(saldo);
+    elSaldo.className = 'valor ' + (saldo >= 0 ? 'positivo' : 'negativo');
+    document.getElementById('kpi-receita').textContent = formatarMoeda(totalReceita);
+    document.getElementById('kpi-despesa').textContent = formatarMoeda(totalDespesa);
+    document.getElementById('kpi-manual').textContent = percManual.toFixed(0) + '%';
+  }
+
+  function renderizarPendencias(lancamentos) {
+    const box = document.getElementById('tabela-pendencias');
+    const pendentes = lancamentos.filter(l => l.status === 'pendente_revisao').sort((a,b) => new Date(b.criado_em) - new Date(a.criado_em));
+    if (pendentes.length === 0) { box.innerHTML = '<div class="vazio">Nenhuma pendência no momento.</div>'; return; }
+    let html = '<table><thead><tr><th>Data</th><th>Fornecedor</th><th>Valor</th><th>Motivo</th><th>Origem</th><th></th></tr></thead><tbody>';
+    pendentes.forEach(l => {
+      const dataFmt = new Date(l.data_lancamento + 'T00:00:00').toLocaleDateString('pt-BR');
+      html += `<tr>
+        <td>${dataFmt}</td><td>${l.fornecedor || '—'}</td><td>${formatarMoeda(l.valor)}</td>
+        <td class="motivo">${l.motivo_pendencia || '—'}</td><td><span class="tag pendente_revisao">${l.origem}</span></td>
+        <td class="acoes">
+          <button class="confirmar" onclick="revisarLancamento('${l.id}','confirmado')">Confirmar</button>
+          <button class="rejeitar" onclick="revisarLancamento('${l.id}','rejeitado')">Rejeitar</button>
+        </td></tr>`;
+    });
+    html += '</tbody></table>';
+    box.innerHTML = html;
+  }
+
+  async function revisarLancamento(id, novoStatus) {
+    const { data: { user } } = await sb.auth.getUser();
+    await sb.from('lancamentos').update({ status: novoStatus, revisado_por: user.email, motivo_pendencia: null }).eq('id', id);
+    await recarregarTudo();
+  }
+
+  function renderizarCategoriasDash(lancamentos) {
+    const box = document.getElementById('grafico-categorias');
+    const validos = lancamentos.filter(l => l.status === 'confirmado' && tipoDaCategoria(l.categoria_id) === 'despesa');
+    if (validos.length === 0) { box.innerHTML = '<div class="vazio">Sem despesas confirmadas ainda.</div>'; return; }
+    const porGrupo = {};
+    validos.forEach(l => { const g = resolverGrupo(l.categoria_id); porGrupo[g] = (porGrupo[g] || 0) + Number(l.valor); });
+    const ordenado = Object.entries(porGrupo).sort((a, b) => b[1] - a[1]).slice(0, 8);
+    const max = ordenado[0][1];
+    let html = '';
+    ordenado.forEach(([nome, valor]) => {
+      const pct = (valor / max * 100).toFixed(1);
+      html += `<div class="barra-linha"><div class="nome">${nome}</div><div class="trilha"><div class="preenchimento" style="width:${pct}%"></div></div><div class="valor">${formatarMoeda(valor)}</div></div>`;
+    });
+    box.innerHTML = html;
+  }
+
+  function renderizarMensal(lancamentos) {
+    const box = document.getElementById('grafico-mensal');
+    const validos = lancamentos.filter(l => l.status === 'confirmado');
+    if (validos.length === 0) { box.innerHTML = '<div class="vazio">Sem lançamentos confirmados ainda.</div>'; return; }
+    const porMes = {};
+    validos.forEach(l => {
+      const mes = l.data_lancamento.slice(0, 7);
+      if (!porMes[mes]) porMes[mes] = { receita: 0, despesa: 0 };
+      const tipo = tipoDaCategoria(l.categoria_id);
+      if (tipo === 'receita') porMes[mes].receita += Number(l.valor);
+      else if (tipo === 'despesa') porMes[mes].despesa += Number(l.valor);
+    });
+    const meses = Object.keys(porMes).sort().slice(-6);
+    const max = Math.max(...meses.map(m => Math.max(porMes[m].receita, porMes[m].despesa)), 1);
+    let html = '<div class="grafico-mensal">';
+    meses.forEach(mes => {
+      const { receita, despesa } = porMes[mes];
+      const alturaReceita = (receita / max * 180).toFixed(0);
+      const alturaDespesa = (despesa / max * 180).toFixed(0);
+      const [ano, mesNum] = mes.split('-');
+      const nomeMes = new Date(ano, mesNum - 1, 1).toLocaleDateString('pt-BR', { month: 'short' });
+      html += `<div class="mes-coluna"><div class="mes-barras">
+        <div class="barra receita" style="height:${alturaReceita}px" title="Receita: ${formatarMoeda(receita)}"></div>
+        <div class="barra despesa" style="height:${alturaDespesa}px" title="Despesa: ${formatarMoeda(despesa)}"></div>
+        </div><div class="mes-rotulo">${nomeMes}/${ano.slice(2)}</div></div>`;
+    });
+    html += '</div><div class="legenda-grafico"><span><span class="ponto receita"></span>Receita</span><span><span class="ponto despesa"></span>Despesa</span></div>';
+    box.innerHTML = html;
+  }
+
+  function renderizarOrigem(lancamentos) {
+    const box = document.getElementById('grafico-origem');
+    const validos = lancamentos.filter(l => l.status !== 'rejeitado');
+    if (validos.length === 0) { box.innerHTML = '<div class="vazio">Sem dados ainda.</div>'; return; }
+    const manual = validos.filter(l => l.origem === 'manual').length;
+    const automatico = validos.length - manual;
+    const pctManual = (manual / validos.length * 100);
+    const grausManual = (pctManual * 3.6).toFixed(0);
+    const anelCss = `conic-gradient(var(--ouro) 0deg ${grausManual}deg, var(--bordo) ${grausManual}deg 360deg)`;
+    box.innerHTML = `<div class="anel-wrap"><div class="anel" style="background:${anelCss}"></div>
+      <div class="anel-legenda">
+        <div class="item"><span class="ponto automatico"></span>Automático: ${automatico} lançamentos</div>
+        <div class="item"><span class="ponto manual"></span>Manual: ${manual} lançamentos</div>
+      </div></div>`;
+  }
+
+  // ================= LANÇAMENTO MANUAL =================
+  let tipoManual = 'despesa';
+  function selecionarTipoManual(tipo) {
+    tipoManual = tipo;
+    document.getElementById('manual-btn-despesa').classList.toggle('selecionada', tipo === 'despesa');
+    document.getElementById('manual-btn-receita').classList.toggle('selecionada', tipo === 'receita');
+    montarSelectGrupo('manual', tipo);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('manual-f-valor').addEventListener('input', (e) => {
+      document.getElementById('manual-aviso-teto').style.display = parseFloat(e.target.value || 0) > TETO_REVISAO ? 'block' : 'none';
+    });
+    document.getElementById('comp-f-valor').addEventListener('input', atualizarPainelStatusComprovante);
+  });
+
+  async function salvarLancamentoManual() {
+    const msgBox = document.getElementById('manual-form-msg');
+    msgBox.innerHTML = '';
+    const data_lancamento = document.getElementById('manual-f-data').value;
+    const valor = parseFloat(document.getElementById('manual-f-valor').value);
+    const fornecedor = document.getElementById('manual-f-fornecedor').value.trim();
+    const descricao = document.getElementById('manual-f-descricao').value.trim();
+    const categoria_id = categoriaFinalSelecionada('manual');
+
+    if (!data_lancamento || !valor || valor <= 0 || !fornecedor || !categoria_id) {
+      msgBox.innerHTML = '<div class="msg erro">Preencha data, valor, fornecedor e ao menos o grupo da categoria.</div>';
+      return;
+    }
+    const { data: { user } } = await sb.auth.getUser();
+    const btn = document.getElementById('manual-btn-salvar');
+    btn.disabled = true; btn.textContent = 'Salvando…';
+
+    const { error } = await sb.from('lancamentos').insert({
+      data_lancamento, valor, fornecedor, descricao: descricao || null, categoria_id,
+      origem: 'manual', status: 'confirmado', criado_por: 'usuario', revisado_por: user.email,
+    });
+
+    btn.disabled = false; btn.textContent = 'Lançar';
+    if (error) { msgBox.innerHTML = `<div class="msg erro">Erro ao salvar: ${error.message}</div>`; return; }
+
+    msgBox.innerHTML = '<div class="msg sucesso">Lançamento registrado com sucesso.</div>';
+    document.getElementById('manual-f-valor').value = '';
+    document.getElementById('manual-f-fornecedor').value = '';
+    document.getElementById('manual-f-descricao').value = '';
+    document.getElementById('manual-aviso-teto').style.display = 'none';
+    await recarregarTudo();
+  }
+
+  async function carregarLancamentosManual() {
+    const lista = document.getElementById('manual-lista');
+    const { data, error } = await sb.from('lancamentos')
+      .select('id, data_lancamento, valor, fornecedor, origem, status, categorias(nome, tipo)')
+      .order('criado_em', { ascending: false }).limit(10);
+    if (error) { lista.innerHTML = `<div class="vazio">Erro: ${error.message}</div>`; return; }
+    if (!data || data.length === 0) { lista.innerHTML = '<div class="vazio">Nenhum lançamento ainda.</div>'; return; }
+    let html = '<table><thead><tr><th>Data</th><th>Fornecedor</th><th>Categoria</th><th>Origem</th><th>Valor</th><th>Status</th></tr></thead><tbody>';
+    data.forEach(l => {
+      const tipo = l.categorias ? l.categorias.tipo : null;
+      const classeValor = tipo === 'receita' ? 'valor-receita' : 'valor-despesa';
+      const sinal = tipo === 'receita' ? '+' : '−';
+      const dataFmt = new Date(l.data_lancamento + 'T00:00:00').toLocaleDateString('pt-BR');
+      html += `<tr><td>${dataFmt}</td><td>${l.fornecedor || '—'}</td><td>${l.categorias ? l.categorias.nome : '—'}</td>
+        <td>${l.origem}</td><td class="${classeValor}">${sinal} ${formatarMoeda(l.valor)}</td>
+        <td><span class="tag ${l.status}">${l.status === 'confirmado' ? 'Confirmado' : 'Pendente'}</span></td></tr>`;
+    });
+    html += '</tbody></table>';
+    lista.innerHTML = html;
+  }
+
+  // ================= LEITURA DE COMPROVANTE =================
+  document.addEventListener('DOMContentLoaded', () => {
+    const zona = document.getElementById('comp-zona-upload');
+    const inputArquivo = document.getElementById('comp-input-arquivo');
+    inputArquivo.addEventListener('change', (e) => tratarArquivoComprovante(e.target.files[0]));
+    zona.addEventListener('dragover', (e) => { e.preventDefault(); zona.classList.add('arrastando'); });
+    zona.addEventListener('dragleave', () => zona.classList.remove('arrastando'));
+    zona.addEventListener('drop', (e) => { e.preventDefault(); zona.classList.remove('arrastando'); tratarArquivoComprovante(e.dataTransfer.files[0]); });
+  });
+
+  function tratarArquivoComprovante(file) {
+    if (!file) return;
+    arquivoComprovante = file;
+    const previa = document.getElementById('comp-previa-arquivo');
+    const tamanhoKb = (file.size / 1024).toFixed(0);
+    if (file.type.startsWith('image/')) {
+      const url = URL.createObjectURL(file);
+      previa.innerHTML = `<div class="previa"><img src="${url}"><div class="info-arquivo"><strong>${file.name}</strong>${tamanhoKb} KB · ${file.type}</div></div>`;
+    } else {
+      previa.innerHTML = `<div class="previa"><div class="info-arquivo"><strong>${file.name}</strong>${tamanhoKb} KB · PDF</div></div>`;
+    }
+    document.getElementById('comp-btn-analisar').style.display = 'block';
+    document.getElementById('comp-bloco-resultado').style.display = 'none';
+    document.getElementById('comp-analise-msg').innerHTML = '';
+  }
+
+  async function analisarComprovante() {
+    if (!arquivoComprovante) return;
+    const msgBox = document.getElementById('comp-analise-msg');
+    const btn = document.getElementById('comp-btn-analisar');
+    btn.disabled = true; btn.textContent = 'Analisando…'; msgBox.innerHTML = '';
+
+    try {
+      const base64 = await arquivoParaBase64(arquivoComprovante);
+      const ehPdf = arquivoComprovante.type === 'application/pdf';
+      const listaCategorias = todasCategorias.filter(c => c.nivel >= 2)
+        .map(c => `- ${c.nome}${c.palavras_chave && c.palavras_chave.length ? ' (palavras-chave: ' + c.palavras_chave.join(', ') + ')' : ''}`).join('\n');
+      const conteudoArquivo = ehPdf
+        ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }
+        : { type: 'image', source: { type: 'base64', media_type: arquivoComprovante.type, data: base64 } };
+
+      const prompt = `Você está lendo um comprovante financeiro (nota fiscal, recibo ou boleto) para uma empresa de consultoria brasileira.
+Extraia os dados e sugira a categoria mais adequada da lista abaixo.
+
+CATEGORIAS DISPONÍVEIS:
+${listaCategorias}
+
+Responda APENAS com um JSON válido, sem markdown, sem texto antes ou depois, no formato exato:
+{"fornecedor":"nome de quem emitiu","valor":0.00,"data":"AAAA-MM-DD","descricao":"descrição curta","categoria_sugerida":"nome exato de uma categoria da lista, ou null","confianca":0,"fornecedor_reconhecido":true}
+Se não conseguir ler algum campo com segurança, use null nesse campo. "confianca" é de 0 a 100.`;
+
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, messages: [{ role: 'user', content: [conteudoArquivo, { type: 'text', text: prompt }] }] }),
+      });
+      const data = await response.json();
+      const textoResposta = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+      resultadoIA = JSON.parse(textoResposta.replace(/```json|```/g, '').trim());
+      preencherFormularioComprovante(resultadoIA);
+    } catch (err) {
+      console.error(err);
+      msgBox.innerHTML = '<div class="msg erro">Não consegui ler automaticamente. Preencha manualmente abaixo.</div>';
+      resultadoIA = { fornecedor: '', valor: null, data: null, descricao: '', categoria_sugerida: null, confianca: 0, fornecedor_reconhecido: false };
+      preencherFormularioComprovante(resultadoIA);
+    } finally {
+      btn.disabled = false; btn.textContent = 'Analisar com IA';
+    }
+  }
+
+  function preencherFormularioComprovante(r) {
+    document.getElementById('comp-bloco-resultado').style.display = 'block';
+    document.getElementById('comp-f-data').value = r.data || new Date().toISOString().slice(0, 10);
+    document.getElementById('comp-f-valor').value = r.valor ?? '';
+    document.getElementById('comp-f-fornecedor').value = r.fornecedor || '';
+    document.getElementById('comp-f-descricao').value = r.descricao || '';
+
+    const tipoPadrao = r.categoria_sugerida ? detectarTipoCategoriaPorNome(r.categoria_sugerida) : 'despesa';
+    montarSelectGrupo('comp', tipoPadrao);
+
+    if (r.categoria_sugerida) {
+      const achou = todasCategorias.find(c => c.nome.toLowerCase() === r.categoria_sugerida.toLowerCase());
+      if (achou) selecionarCadeiaCategoria('comp', achou);
+    }
+    atualizarPainelStatusComprovante();
+  }
+
+  function detectarTipoCategoriaPorNome(nome) {
+    const c = todasCategorias.find(c => c.nome.toLowerCase() === nome.toLowerCase());
+    return c ? c.tipo : 'despesa';
+  }
+
+  function avaliarStatusComprovante() {
+    const valor = parseFloat(document.getElementById('comp-f-valor').value || 0);
+    const categoriaId = categoriaFinalSelecionada('comp');
+    const fornecedorReconhecido = resultadoIA ? resultadoIA.fornecedor_reconhecido : false;
+    if (valor > TETO_REVISAO) return { status: 'pendente_revisao', motivo: `Valor acima do teto de R$ ${TETO_REVISAO.toLocaleString('pt-BR')}.` };
+    if (!categoriaId) return { status: 'pendente_revisao', motivo: 'Categoria não identificada.' };
+    if (fornecedorReconhecido === false) return { status: 'pendente_revisao', motivo: 'Fornecedor novo, ainda não reconhecido no histórico.' };
+    return { status: 'confirmado', motivo: null };
+  }
+
+  function atualizarPainelStatusComprovante() {
+    const painel = document.getElementById('comp-painel-status');
+    const { status, motivo } = avaliarStatusComprovante();
+    painel.className = 'painel-status ' + (status === 'confirmado' ? 'confirmado' : 'pendente');
+    painel.innerHTML = status === 'confirmado' ? '<strong>Será salvo como confirmado.</strong>' : `<strong>Ficará pendente de revisão.</strong><div class="motivo">${motivo}</div>`;
+  }
+
+  async function salvarLancamentoComprovante() {
+    const msgBox = document.getElementById('comp-salvar-msg');
+    msgBox.innerHTML = '';
+    const btn = document.getElementById('comp-btn-salvar');
+    const data_lancamento = document.getElementById('comp-f-data').value;
+    const valor = parseFloat(document.getElementById('comp-f-valor').value);
+    const fornecedor = document.getElementById('comp-f-fornecedor').value.trim();
+    const descricao = document.getElementById('comp-f-descricao').value.trim();
+    const categoria_id = categoriaFinalSelecionada('comp');
+
+    if (!data_lancamento || !valor || valor <= 0 || !fornecedor) { msgBox.innerHTML = '<div class="msg erro">Preencha data, valor e fornecedor antes de salvar.</div>'; return; }
+
+    btn.disabled = true; btn.textContent = 'Salvando…';
+    try {
+      const { status, motivo } = avaliarStatusComprovante();
+      const { data: { user } } = await sb.auth.getUser();
+      const caminho = `${user.id}/${Date.now()}_${arquivoComprovante.name}`;
+      const { error: erroUpload } = await sb.storage.from('comprovantes').upload(caminho, arquivoComprovante);
+      if (erroUpload) throw new Error('Falha ao subir arquivo: ' + erroUpload.message);
+
+      const { data: lancamento, error: erroLancamento } = await sb.from('lancamentos').insert({
+        data_lancamento, valor, fornecedor, descricao: descricao || null, categoria_id: categoria_id || null,
+        origem: 'comprovante', status, motivo_pendencia: motivo,
+        confianca_classificacao: resultadoIA ? resultadoIA.confianca : null,
+        comprovante_url: caminho, criado_por: 'agente_ia',
+        revisado_por: status === 'confirmado' ? user.email : null,
+      }).select().single();
+      if (erroLancamento) throw new Error('Falha ao gravar lançamento: ' + erroLancamento.message);
+
+      await sb.from('log_agente').insert({
+        acao: 'leitura_comprovante', lancamento_id: lancamento.id,
+        entrada_bruta: JSON.stringify({ arquivo: arquivoComprovante.name }),
+        saida_sugerida: JSON.stringify(resultadoIA), foi_aceito: status === 'confirmado' ? 'sim' : 'pendente',
+      });
+
+      msgBox.innerHTML = '<div class="msg sucesso">Lançamento salvo com sucesso.</div>';
+      await recarregarTudo();
+      setTimeout(reiniciarComprovante, 1200);
+    } catch (err) {
+      msgBox.innerHTML = `<div class="msg erro">${err.message}</div>`;
+    } finally {
+      btn.disabled = false; btn.textContent = 'Confirmar e salvar';
+    }
+  }
+
+  function reiniciarComprovante() {
+    arquivoComprovante = null; resultadoIA = null;
+    document.getElementById('comp-previa-arquivo').innerHTML = '';
+    document.getElementById('comp-input-arquivo').value = '';
+    document.getElementById('comp-btn-analisar').style.display = 'none';
+    document.getElementById('comp-bloco-resultado').style.display = 'none';
+    document.getElementById('comp-analise-msg').innerHTML = '';
+  }
+
+  async function carregarLancamentosComprovante() {
+    const lista = document.getElementById('comp-lista');
+    const { data, error } = await sb.from('lancamentos')
+      .select('id, data_lancamento, valor, fornecedor, status, comprovante_url, categorias(nome, tipo)')
+      .eq('origem', 'comprovante').order('criado_em', { ascending: false }).limit(10);
+    if (error) { lista.innerHTML = `<div class="vazio">Erro: ${error.message}</div>`; return; }
+    if (!data || data.length === 0) { lista.innerHTML = '<div class="vazio">Nenhum comprovante lançado ainda.</div>'; return; }
+    let html = '<table><thead><tr><th>Data</th><th>Fornecedor</th><th>Categoria</th><th>Valor</th><th>Status</th><th></th></tr></thead><tbody>';
+    data.forEach(l => {
+      const tipo = l.categorias ? l.categorias.tipo : null;
+      const classeValor = tipo === 'receita' ? 'valor-receita' : 'valor-despesa';
+      const dataFmt = new Date(l.data_lancamento + 'T00:00:00').toLocaleDateString('pt-BR');
+      html += `<tr><td>${dataFmt}</td><td>${l.fornecedor || '—'}</td><td>${l.categorias ? l.categorias.nome : '—'}</td>
+        <td class="${classeValor}">${formatarMoeda(l.valor)}</td>
+        <td><span class="tag ${l.status}">${l.status === 'confirmado' ? 'Confirmado' : 'Pendente'}</span></td>
+        <td>${l.comprovante_url ? `<span class="link-ver" onclick="verComprovante('${l.comprovante_url}')">Ver</span>` : ''}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    lista.innerHTML = html;
+  }
+
+  async function verComprovante(caminho) {
+    const { data, error } = await sb.storage.from('comprovantes').createSignedUrl(caminho, 60);
+    if (error) { alert('Não foi possível abrir o arquivo: ' + error.message); return; }
+    window.open(data.signedUrl, '_blank');
+  }
+
+  // ================= EXTRATO BANCÁRIO =================
+  document.addEventListener('DOMContentLoaded', () => {
+    const zona = document.getElementById('ext-zona-upload');
+    const inputArquivo = document.getElementById('ext-input-arquivo');
+    inputArquivo.addEventListener('change', (e) => tratarArquivoExtrato(e.target.files[0]));
+    zona.addEventListener('dragover', (e) => { e.preventDefault(); zona.classList.add('arrastando'); });
+    zona.addEventListener('dragleave', () => zona.classList.remove('arrastando'));
+    zona.addEventListener('drop', (e) => { e.preventDefault(); zona.classList.remove('arrastando'); tratarArquivoExtrato(e.dataTransfer.files[0]); });
+  });
+
+  async function tratarArquivoExtrato(file) {
+    if (!file) return;
+    document.getElementById('ext-msg-upload').innerHTML = '';
+    document.getElementById('ext-bloco-mapeamento-csv').style.display = 'none';
+    document.getElementById('ext-card-previa').style.display = 'none';
+    document.getElementById('ext-card-resultado').style.display = 'none';
+    const nomeMinusculo = file.name.toLowerCase();
+
+    if (nomeMinusculo.endsWith('.ofx')) {
+      formatoAtual = 'ofx';
+      const texto = await file.text();
+      const linhas = parseOFX(texto);
+      if (linhas.length === 0) { document.getElementById('ext-msg-upload').innerHTML = '<div class="msg erro">Não encontrei transações nesse OFX.</div>'; return; }
+      mostrarPreviaExtrato(linhas);
+    } else if (nomeMinusculo.endsWith('.csv')) {
+      formatoAtual = 'csv';
+      csvBruto = await file.text();
+      prepararMapeamentoCsv(csvBruto);
+    } else if (file.type === 'application/pdf') {
+      formatoAtual = 'pdf';
+      document.getElementById('ext-msg-upload').innerHTML = '<div class="msg info">Lendo PDF com IA, pode levar alguns segundos…</div>';
+      try {
+        const linhas = await lerExtratoPdfComIA(file);
+        document.getElementById('ext-msg-upload').innerHTML = '<div class="msg info">PDF é uma "foto" do extrato: confira cada linha antes de conciliar.</div>';
+        mostrarPreviaExtrato(linhas);
+      } catch (err) {
+        document.getElementById('ext-msg-upload').innerHTML = `<div class="msg erro">Não consegui ler o PDF: ${err.message}</div>`;
+      }
+    } else {
+      document.getElementById('ext-msg-upload').innerHTML = '<div class="msg erro">Formato não reconhecido. Use .ofx, .csv ou .pdf.</div>';
+    }
+  }
+
+  function parseOFX(texto) {
+    const blocos = texto.match(/<STMTTRN>[\s\S]*?<\/STMTTRN>/gi) || [];
+    return blocos.map(bloco => {
+      const pegarTag = (tag) => { const m = bloco.match(new RegExp('<' + tag + '>([^<\\r\\n]*)', 'i')); return m ? m[1].trim() : null; };
+      const dtRaw = pegarTag('DTPOSTED'); const amtRaw = pegarTag('TRNAMT');
+      const memo = pegarTag('MEMO') || pegarTag('NAME') || '';
+      if (!dtRaw || !amtRaw) return null;
+      const data = `${dtRaw.slice(0,4)}-${dtRaw.slice(4,6)}-${dtRaw.slice(6,8)}`;
+      const valorNum = parseFloat(amtRaw);
+      return { data, valor: Math.abs(valorNum), descricao: memo, tipo: valorNum < 0 ? 'saída' : 'entrada' };
+    }).filter(Boolean);
+  }
+
+  function prepararMapeamentoCsv(texto) {
+    const delimitador = texto.split('\n')[0].includes(';') ? ';' : ',';
+    const linhas = texto.trim().split('\n').map(l => l.split(delimitador));
+    const cabecalho = linhas[0];
+    ['ext-map-data', 'ext-map-valor', 'ext-map-descricao'].forEach(id => {
+      document.getElementById(id).innerHTML = cabecalho.map((c, i) => `<option value="${i}">${c.trim() || 'Coluna ' + (i+1)}</option>`).join('');
+    });
+    document.getElementById('ext-bloco-mapeamento-csv').style.display = 'block';
+  }
+
+  function confirmarMapeamentoCsv() {
+    const delimitador = csvBruto.split('\n')[0].includes(';') ? ';' : ',';
+    const linhas = csvBruto.trim().split('\n').map(l => l.split(delimitador));
+    const idxData = parseInt(document.getElementById('ext-map-data').value);
+    const idxValor = parseInt(document.getElementById('ext-map-valor').value);
+    const idxDescricao = parseInt(document.getElementById('ext-map-descricao').value);
+    const dados = linhas.slice(1).map(cols => {
+      const valorTexto = (cols[idxValor] || '').replace(/[^\d,.-]/g, '').replace(',', '.');
+      const valorNum = parseFloat(valorTexto);
+      return { data: normalizarData(cols[idxData]), valor: Math.abs(valorNum), descricao: (cols[idxDescricao] || '').trim(), tipo: valorNum < 0 ? 'saída' : 'entrada' };
+    }).filter(l => l.data && !isNaN(l.valor));
+    document.getElementById('ext-bloco-mapeamento-csv').style.display = 'none';
+    mostrarPreviaExtrato(dados);
+  }
+
+  function normalizarData(txt) {
+    if (!txt) return null;
+    txt = txt.trim();
+    if (/^\d{4}-\d{2}-\d{2}/.test(txt)) return txt.slice(0, 10);
+    const m = txt.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
+    if (m) { const ano = m[3].length === 2 ? '20' + m[3] : m[3]; return `${ano}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`; }
+    return null;
+  }
+
+  async function lerExtratoPdfComIA(file) {
+    const base64 = await arquivoParaBase64(file);
+    const prompt = `Este é um extrato bancário em PDF. Extraia TODAS as transações (não resuma, não pule nenhuma).
+Responda APENAS com um JSON válido, sem markdown, no formato:
+[{"data":"AAAA-MM-DD","valor":0.00,"descricao":"texto como aparece no extrato","tipo":"entrada ou saída"}]
+"valor" é sempre positivo.`;
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 4000, messages: [{ role: 'user', content: [{ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }, { type: 'text', text: prompt }] }] }),
+    });
+    const data = await response.json();
+    const textoResposta = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
+    return JSON.parse(textoResposta.replace(/```json|```/g, '').trim());
+  }
+
+  function mostrarPreviaExtrato(linhas) {
+    linhasParaConciliar = linhas;
+    document.getElementById('ext-card-previa').style.display = 'block';
+    document.getElementById('ext-contagem-linhas').textContent = `${linhas.length} transações encontradas — confira antes de conciliar.`;
+    let html = '<table><thead><tr><th>Data</th><th>Descrição</th><th>Tipo</th><th>Valor</th></tr></thead><tbody>';
+    linhas.forEach(l => {
+      const dataFmt = l.data ? new Date(l.data + 'T00:00:00').toLocaleDateString('pt-BR') : '—';
+      html += `<tr><td>${dataFmt}</td><td>${l.descricao || '—'}</td><td>${l.tipo}</td><td>${formatarMoeda(l.valor)}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('ext-tabela-previa').innerHTML = html;
+  }
+
+  function reiniciarExtrato() {
+    linhasParaConciliar = []; formatoAtual = null; csvBruto = null;
+    document.getElementById('ext-input-arquivo').value = '';
+    document.getElementById('ext-card-previa').style.display = 'none';
+    document.getElementById('ext-card-resultado').style.display = 'none';
+    document.getElementById('ext-msg-upload').innerHTML = '';
+  }
+
+  async function conciliarTudo() {
+    const btn = document.getElementById('ext-btn-conciliar');
+    btn.disabled = true; btn.textContent = 'Conciliando…';
+    document.getElementById('ext-conciliar-msg').innerHTML = '';
+    let conciliados = 0, pendentes = 0;
+    const resultados = [];
+
+    for (const linha of linhasParaConciliar) {
+      const { data: candidatos } = await sb.from('lancamentos').select('id')
+        .eq('data_lancamento', linha.data).eq('valor', linha.valor).eq('conciliado_com_extrato', false);
+      let status = 'sem_correspondencia', lancamentoId = null;
+      if (candidatos && candidatos.length === 1) { status = 'conciliado'; lancamentoId = candidatos[0].id; conciliados++; }
+      else if (candidatos && candidatos.length > 1) { status = 'divergente'; pendentes++; }
+      else { pendentes++; }
+
+      const { error } = await sb.from('extratos_importados').insert({
+        data_movimentacao: linha.data, valor: linha.valor, descricao_banco: linha.descricao || null,
+        formato_origem: formatoAtual, status_conciliacao: status, lancamento_id: lancamentoId,
+      });
+      if (!error && lancamentoId) await sb.from('lancamentos').update({ conciliado_com_extrato: true }).eq('id', lancamentoId);
+      resultados.push({ ...linha, status });
+    }
+
+    document.getElementById('ext-card-previa').style.display = 'none';
+    document.getElementById('ext-card-resultado').style.display = 'block';
+    document.getElementById('ext-qtd-conciliado').textContent = conciliados;
+    document.getElementById('ext-qtd-pendente').textContent = pendentes;
+
+    let html = '<table><thead><tr><th>Data</th><th>Descrição</th><th>Valor</th><th>Status</th></tr></thead><tbody>';
+    resultados.forEach(r => {
+      const dataFmt = new Date(r.data + 'T00:00:00').toLocaleDateString('pt-BR');
+      const rotulo = { conciliado: 'Conciliado', sem_correspondencia: 'Sem correspondência', divergente: 'Múltiplas correspondências' }[r.status];
+      html += `<tr><td>${dataFmt}</td><td>${r.descricao || '—'}</td><td>${formatarMoeda(r.valor)}</td><td><span class="tag ${r.status}">${rotulo}</span></td></tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('ext-tabela-resultado').innerHTML = html;
+
+    btn.disabled = false; btn.textContent = 'Conciliar com os lançamentos';
+    await recarregarTudo();
+  }
+
+  async function carregarExtratosRecentes() {
+    const lista = document.getElementById('ext-lista');
+    const { data, error } = await sb.from('extratos_importados')
+      .select('data_movimentacao, valor, descricao_banco, formato_origem, status_conciliacao')
+      .order('importado_em', { ascending: false }).limit(10);
+    if (error) { lista.innerHTML = `<div class="vazio">Erro: ${error.message}</div>`; return; }
+    if (!data || data.length === 0) { lista.innerHTML = '<div class="vazio">Nenhuma importação ainda.</div>'; return; }
+    let html = '<table><thead><tr><th>Data</th><th>Descrição</th><th>Formato</th><th>Valor</th><th>Status</th></tr></thead><tbody>';
+    data.forEach(e => {
+      const dataFmt = new Date(e.data_movimentacao + 'T00:00:00').toLocaleDateString('pt-BR');
+      const rotulo = { conciliado: 'Conciliado', sem_correspondencia: 'Sem correspondência', divergente: 'Múltiplas correspondências' }[e.status_conciliacao];
+      html += `<tr><td>${dataFmt}</td><td>${e.descricao_banco || '—'}</td><td>${e.formato_origem.toUpperCase()}</td><td>${formatarMoeda(e.valor)}</td><td><span class="tag ${e.status_conciliacao}">${rotulo}</span></td></tr>`;
+    });
+    html += '</tbody></table>';
+    lista.innerHTML = html;
+  }
+
+  // ================= SESSÃO JÁ ATIVA =================
+  (async function checarSessao() {
+    const { data: { session } } = await sb.auth.getSession();
+    if (session) iniciarApp();
+  })();
+</script>
+</body>
+</html>
