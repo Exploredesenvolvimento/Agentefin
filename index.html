@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>agendefin · Portal Financeiro EXPLORE</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 <style>
   :root {
     --bordo: #612B4A; --bordo-escuro: #4A2038; --ouro: #C9A96E; --ouro-claro: #E4D4B8;
@@ -154,6 +155,10 @@
   .acoes button { border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.78rem; cursor: pointer; font-family: Calibri, sans-serif; }
   .acoes button.confirmar { background: #E9F3EC; color: var(--sucesso); }
   .acoes button.rejeitar { background: #FBEAEA; color: var(--erro); }
+  .acoes-lote { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
+  .acoes-lote button.rejeitar-lote { color: var(--erro); border-color: var(--erro); }
+  .acoes-lote button.rejeitar-lote:hover { background: #FBEAEA; }
+  .contagem-selecao { font-size: 0.8rem; color: var(--texto-suave); }
   .valor-despesa { color: var(--erro); }
   .valor-receita { color: var(--sucesso); }
   .vazio { text-align: center; color: var(--texto-suave); padding: 24px; font-size: 0.85rem; }
@@ -277,7 +282,7 @@
             <h2>Lançamentos filtrados</h2>
             <p class="legenda" id="contagem-lancamentos-filtrados">Todos os lançamentos, respeitando os filtros acima.</p>
           </div>
-          <button class="secundaria" onclick="exportarCsvFiltrados()">Exportar CSV</button>
+          <button class="secundaria" onclick="exportarExcelFiltrados()">Exportar Excel</button>
         </div>
         <div id="tabela-lancamentos-filtrados"><div class="vazio">Carregando…</div></div>
       </div>
@@ -721,36 +726,159 @@
     const novaCategoriaId = document.getElementById(`cat-edicao-${id}`).value;
     if (!novaCategoriaId) { alert('Escolha uma categoria.'); return; }
     const { data: { user } } = await sb.auth.getUser();
-    await sb.from('lancamentos').update({ categoria_id: novaCategoriaId, revisado_por: user.email }).eq('id', id);
+    const { data: linha } = await sb.from('lancamentos')
+      .update({ categoria_id: novaCategoriaId, revisado_por: user.email })
+      .eq('id', id)
+      .select('fornecedor')
+      .single();
+    if (linha) await atualizarFornecedorConhecido(linha.fornecedor, novaCategoriaId);
     await recarregarTudo();
   }
 
-  function exportarCsvFiltrados() {
+  async function exportarExcelFiltrados() {
     if (ultimaListaFiltrada.length === 0) { alert('Não há lançamentos para exportar com esse filtro.'); return; }
 
-    const cabecalho = ['Data', 'Fornecedor', 'Categoria', 'Origem', 'Valor', 'Status'];
-    const linhas = ultimaListaFiltrada.map(l => {
-      const cat = mapaCategorias[l.categoria_id];
-      const dataFmt = new Date(l.data_lancamento + 'T00:00:00').toLocaleDateString('pt-BR');
-      const escapar = (txt) => `"${String(txt ?? '').replace(/"/g, '""')}"`;
-      return [
-        dataFmt,
-        escapar(l.fornecedor),
-        escapar(cat ? cat.nome : ''),
-        l.origem,
-        String(l.valor).replace('.', ','),
-        l.status,
-      ].join(';');
+    const CORES = {
+      bordo: 'FF612B4A',
+      bordoEscuro: 'FF4A2038',
+      ouro: 'FFC9A96E',
+      ouroClaro: 'FFE4D4B8',
+      fundo: 'FFFAF8F5',
+      texto: 'FF2B2320',
+      erro: 'FFA23B3B',
+      sucesso: 'FF3B6E4E',
+      pendente: 'FFB8863B',
+      branco: 'FFFFFFFF',
+    };
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'agendefin · EXPLORE';
+    workbook.created = new Date();
+
+    const sheet = workbook.addWorksheet('Lançamentos', {
+      views: [{ state: 'frozen', ySplit: 4 }],
     });
 
-    const csv = '\uFEFF' + cabecalho.join(';') + '\n' + linhas.join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    sheet.columns = [
+      { width: 13 }, { width: 34 }, { width: 30 }, { width: 15 }, { width: 16 }, { width: 15 },
+    ];
+
+    // ---------- Título ----------
+    sheet.mergeCells('A1:F1');
+    const tituloCel = sheet.getCell('A1');
+    tituloCel.value = 'agendefin · Lançamentos Financeiros';
+    tituloCel.font = { name: 'Georgia', size: 16, bold: true, color: { argb: CORES.branco } };
+    tituloCel.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+    tituloCel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CORES.bordo } };
+    sheet.getRow(1).height = 30;
+
+    // ---------- Subtítulo (data e filtros) ----------
+    sheet.mergeCells('A2:F2');
+    const filtroTexto = montarResumoFiltrosAtivos();
+    const subCel = sheet.getCell('A2');
+    subCel.value = `Exportado em ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')} · ${filtroTexto}`;
+    subCel.font = { name: 'Calibri', size: 10, italic: true, color: { argb: CORES.branco } };
+    subCel.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+    subCel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CORES.bordoEscuro } };
+    sheet.getRow(2).height = 20;
+
+    sheet.getRow(3).height = 6; // respiro visual
+
+    // ---------- Cabeçalho da tabela ----------
+    const linhaCabecalho = sheet.getRow(4);
+    linhaCabecalho.values = ['Data', 'Fornecedor', 'Categoria', 'Origem', 'Valor', 'Status'];
+    linhaCabecalho.eachCell((cel) => {
+      cel.font = { name: 'Calibri', bold: true, color: { argb: CORES.branco }, size: 11 };
+      cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CORES.bordo } };
+      cel.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
+      cel.border = { bottom: { style: 'medium', color: { argb: CORES.ouro } } };
+    });
+    linhaCabecalho.height = 22;
+
+    // ---------- Linhas de dados ----------
+    let totalReceita = 0;
+    let totalDespesa = 0;
+
+    ultimaListaFiltrada.forEach((l, i) => {
+      const cat = mapaCategorias[l.categoria_id];
+      const tipo = cat ? cat.tipo : null;
+      if (tipo === 'receita') totalReceita += Number(l.valor);
+      if (tipo === 'despesa') totalDespesa += Number(l.valor);
+
+      const linha = sheet.addRow([
+        new Date(l.data_lancamento + 'T00:00:00'),
+        l.fornecedor || '—',
+        cat ? cat.nome : 'Não classificado',
+        l.origem.charAt(0).toUpperCase() + l.origem.slice(1),
+        tipo === 'despesa' ? -Number(l.valor) : Number(l.valor),
+        l.status === 'confirmado' ? 'Confirmado' : l.status === 'pendente_revisao' ? 'Pendente' : 'Rejeitado',
+      ]);
+
+      const corZebra = i % 2 === 1 ? CORES.fundo : CORES.branco;
+      linha.eachCell((cel) => {
+        cel.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: corZebra } };
+        cel.font = { name: 'Calibri', size: 10.5, color: { argb: CORES.texto } };
+        cel.border = { bottom: { style: 'hair', color: { argb: 'FFE8E1D8' } } };
+      });
+
+      linha.getCell(1).numFmt = 'dd/mm/yyyy';
+      linha.getCell(5).numFmt = 'R$ #,##0.00;[Red]-R$ #,##0.00';
+      linha.getCell(5).font = {
+        name: 'Calibri', size: 10.5, bold: true,
+        color: { argb: tipo === 'receita' ? CORES.sucesso : tipo === 'despesa' ? CORES.erro : CORES.texto },
+      };
+
+      const corStatus = l.status === 'confirmado' ? CORES.sucesso : l.status === 'pendente_revisao' ? CORES.pendente : CORES.erro;
+      linha.getCell(6).font = { name: 'Calibri', size: 10.5, color: { argb: corStatus } };
+    });
+
+    // ---------- Linha de totais ----------
+    sheet.addRow([]);
+    const linhaSaldo = sheet.addRow(['', '', '', 'Saldo do período', totalReceita - totalDespesa, '']);
+    const linhaReceita = sheet.addRow(['', '', '', 'Total de receitas', totalReceita, '']);
+    const linhaDespesa = sheet.addRow(['', '', '', 'Total de despesas', -totalDespesa, '']);
+
+    [linhaSaldo, linhaReceita, linhaDespesa].forEach((linha) => {
+      linha.getCell(4).font = { name: 'Calibri', bold: true, size: 10.5, color: { argb: CORES.texto } };
+      linha.getCell(4).alignment = { horizontal: 'right' };
+      linha.getCell(5).numFmt = 'R$ #,##0.00;[Red]-R$ #,##0.00';
+      linha.getCell(5).font = { name: 'Calibri', bold: true, size: 11 };
+      linha.getCell(5).border = { top: { style: 'thin', color: { argb: CORES.ouro } } };
+    });
+    linhaSaldo.getCell(5).font.color = { argb: (totalReceita - totalDespesa) >= 0 ? CORES.sucesso : CORES.erro };
+    linhaReceita.getCell(5).font.color = { argb: CORES.sucesso };
+    linhaDespesa.getCell(5).font.color = { argb: CORES.erro };
+
+    sheet.autoFilter = { from: 'A4', to: 'F4' };
+
+    // ---------- Gerar e baixar o arquivo ----------
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `agendefin_lancamentos_${new Date().toISOString().slice(0, 10)}.csv`;
+    link.download = `agendefin_lancamentos_${new Date().toISOString().slice(0, 10)}.xlsx`;
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  function montarResumoFiltrosAtivos() {
+    const partes = [];
+    const dataInicio = document.getElementById('filtro-data-inicio').value;
+    const dataFim = document.getElementById('filtro-data-fim').value;
+    const categoriaId = document.getElementById('filtro-categoria').value;
+    const status = document.getElementById('filtro-status').value;
+    const origem = document.getElementById('filtro-origem').value;
+
+    if (dataInicio || dataFim) {
+      const fmt = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('pt-BR') : '…';
+      partes.push(`Período: ${fmt(dataInicio)} a ${fmt(dataFim)}`);
+    }
+    if (categoriaId && mapaCategorias[categoriaId]) partes.push(`Categoria: ${mapaCategorias[categoriaId].nome}`);
+    if (status) partes.push(`Status: ${status}`);
+    if (origem) partes.push(`Origem: ${origem}`);
+
+    return partes.length ? partes.join(' · ') : 'Sem filtros aplicados';
   }
 
 
@@ -793,23 +921,89 @@
     const box = document.getElementById('tabela-pendencias');
     const pendentes = lancamentos.filter(l => l.status === 'pendente_revisao').sort((a,b) => new Date(b.criado_em) - new Date(a.criado_em));
     if (pendentes.length === 0) { box.innerHTML = '<div class="vazio">Nenhuma pendência no momento.</div>'; return; }
-    let html = '<table><thead><tr><th>Data</th><th>Fornecedor</th><th>Valor</th><th>Motivo</th><th>Origem</th><th>Categoria</th><th></th></tr></thead><tbody>';
+
+    let html = `
+      <div class="acoes-lote">
+        <button class="secundaria" onclick="confirmarSelecionadas()">Confirmar selecionadas</button>
+        <button class="secundaria rejeitar-lote" onclick="rejeitarSelecionadas()">Rejeitar selecionadas</button>
+        <span class="contagem-selecao" id="contagem-selecao">0 selecionadas</span>
+      </div>
+      <table><thead><tr>
+        <th><input type="checkbox" id="check-todas-pendencias" onchange="alternarTodasPendencias(this.checked)"></th>
+        <th>Data</th><th>Fornecedor</th><th>Valor</th><th>Motivo</th><th>Origem</th><th>Categoria</th><th></th>
+      </tr></thead><tbody>`;
+
     pendentes.forEach(l => {
       const dataFmt = new Date(l.data_lancamento + 'T00:00:00').toLocaleDateString('pt-BR');
       html += `<tr>
+        <td><input type="checkbox" class="check-pendencia" data-id="${l.id}" onchange="atualizarContagemSelecao()"></td>
         <td>${dataFmt}</td><td>${l.fornecedor || '—'}</td><td>${formatarMoeda(l.valor)}</td>
         <td class="motivo">${l.motivo_pendencia || '—'}</td><td><span class="tag pendente_revisao">${l.origem}</span></td>
         <td><select id="pend-categoria-${l.id}" style="min-width:180px">${opcoesCategoriaAgrupadas(l.categoria_id)}</select></td>
         <td class="acoes">
-          <button class="confirmar" onclick="revisarLancamento('${l.id}','confirmado')">Confirmar</button>
-          <button class="rejeitar" onclick="revisarLancamento('${l.id}','rejeitado')">Rejeitar</button>
+          <button class="confirmar" onclick="revisarLancamentoIndividual('${l.id}','confirmado')">Confirmar</button>
+          <button class="rejeitar" onclick="revisarLancamentoIndividual('${l.id}','rejeitado')">Rejeitar</button>
         </td></tr>`;
     });
     html += '</tbody></table>';
     box.innerHTML = html;
   }
 
-  async function revisarLancamento(id, novoStatus) {
+  function alternarTodasPendencias(marcado) {
+    document.querySelectorAll('.check-pendencia').forEach(c => c.checked = marcado);
+    atualizarContagemSelecao();
+  }
+
+  function atualizarContagemSelecao() {
+    const total = document.querySelectorAll('.check-pendencia:checked').length;
+    const contagem = document.getElementById('contagem-selecao');
+    if (contagem) contagem.textContent = `${total} selecionada${total === 1 ? '' : 's'}`;
+
+    const todasCheckboxes = document.querySelectorAll('.check-pendencia');
+    const checkTodas = document.getElementById('check-todas-pendencias');
+    if (checkTodas) checkTodas.checked = todasCheckboxes.length > 0 && total === todasCheckboxes.length;
+  }
+
+  function idsPendenciasSelecionadas() {
+    return [...document.querySelectorAll('.check-pendencia:checked')].map(c => c.dataset.id);
+  }
+
+  // Chamada toda vez que um lançamento é confirmado, de qualquer uma das 4 formas possíveis
+  // (manual, comprovante, fila de pendências, edição posterior). É isso que faz o sistema
+  // "aprender": da próxima vez que esse fornecedor aparecer, não precisa mais gastar IA.
+  async function atualizarFornecedorConhecido(fornecedor, categoriaId) {
+    if (!fornecedor || !categoriaId) return;
+    const normalizado = fornecedor.trim().toUpperCase().replace(/\s+/g, ' ');
+
+    const { data: existente } = await sb.from('fornecedores_conhecidos')
+      .select('id, categoria_id, vezes_confirmado')
+      .eq('fornecedor_normalizado', normalizado)
+      .maybeSingle();
+
+    if (existente) {
+      if (existente.categoria_id === categoriaId) {
+        await sb.from('fornecedores_conhecidos').update({
+          vezes_confirmado: existente.vezes_confirmado + 1,
+          ultima_confirmacao: new Date().toISOString(),
+        }).eq('id', existente.id);
+      } else {
+        // Categoria mudou em relação à última vez: reseta a contagem de confiança,
+        // porque um histórico inconsistente não deveria disparar automação total.
+        await sb.from('fornecedores_conhecidos').update({
+          categoria_id: categoriaId,
+          vezes_confirmado: 1,
+          ultima_confirmacao: new Date().toISOString(),
+        }).eq('id', existente.id);
+      }
+    } else {
+      await sb.from('fornecedores_conhecidos').insert({
+        fornecedor_normalizado: normalizado,
+        categoria_id: categoriaId,
+      });
+    }
+  }
+
+  async function revisarLancamento(id, novoStatus, semRecarregar = false) {
     const { data: { user } } = await sb.auth.getUser();
     const atualizacao = { status: novoStatus, revisado_por: user.email, motivo_pendencia: null };
 
@@ -817,13 +1011,55 @@
       const selectCategoria = document.getElementById(`pend-categoria-${id}`);
       const categoriaEscolhida = selectCategoria ? selectCategoria.value : null;
       if (!categoriaEscolhida) {
-        alert('Escolha uma categoria antes de confirmar.');
-        return;
+        return { ok: false, motivo: 'sem categoria escolhida' };
       }
       atualizacao.categoria_id = categoriaEscolhida;
     }
 
-    await sb.from('lancamentos').update(atualizacao).eq('id', id);
+    const { data: linhaAtualizada, error } = await sb.from('lancamentos').update(atualizacao).eq('id', id).select('fornecedor').single();
+    if (!error && novoStatus === 'confirmado' && linhaAtualizada) {
+      await atualizarFornecedorConhecido(linhaAtualizada.fornecedor, atualizacao.categoria_id);
+    }
+    if (!semRecarregar) {
+      await recarregarTudo();
+    }
+    return { ok: !error, motivo: error ? error.message : null };
+  }
+
+  async function revisarLancamentoIndividual(id, novoStatus) {
+    const resultado = await revisarLancamento(id, novoStatus, true);
+    if (!resultado.ok && novoStatus === 'confirmado' && resultado.motivo === 'sem categoria escolhida') {
+      alert('Escolha uma categoria antes de confirmar.');
+      return;
+    }
+    await recarregarTudo();
+  }
+
+  async function confirmarSelecionadas() {
+    const ids = idsPendenciasSelecionadas();
+    if (ids.length === 0) { alert('Selecione ao menos uma pendência.'); return; }
+
+    const semCategoria = [];
+    for (const id of ids) {
+      const resultado = await revisarLancamento(id, 'confirmado', true);
+      if (!resultado.ok) semCategoria.push(id);
+    }
+
+    await recarregarTudo();
+
+    if (semCategoria.length > 0) {
+      alert(`${semCategoria.length} lançamento(s) não foram confirmados por falta de categoria escolhida. Escolha a categoria e confirme individualmente.`);
+    }
+  }
+
+  async function rejeitarSelecionadas() {
+    const ids = idsPendenciasSelecionadas();
+    if (ids.length === 0) { alert('Selecione ao menos uma pendência.'); return; }
+    if (!confirm(`Rejeitar ${ids.length} lançamento(s) selecionado(s)?`)) return;
+
+    for (const id of ids) {
+      await revisarLancamento(id, 'rejeitado', true);
+    }
     await recarregarTudo();
   }
 
@@ -930,6 +1166,8 @@
 
     btn.disabled = false; btn.textContent = 'Lançar';
     if (error) { msgBox.innerHTML = `<div class="msg erro">Erro ao salvar: ${error.message}</div>`; return; }
+
+    await atualizarFornecedorConhecido(fornecedor, categoria_id);
 
     msgBox.innerHTML = '<div class="msg sucesso">Lançamento registrado com sucesso.</div>';
     document.getElementById('manual-f-valor').value = '';
@@ -1107,6 +1345,10 @@ Se não conseguir ler algum campo com segurança, use null nesse campo. "confian
         revisado_por: status === 'confirmado' ? user.email : null,
       }).select().single();
       if (erroLancamento) throw new Error('Falha ao gravar lançamento: ' + erroLancamento.message);
+
+      if (status === 'confirmado' && categoria_id) {
+        await atualizarFornecedorConhecido(fornecedor, categoria_id);
+      }
 
       await sb.from('log_agente').insert({
         acao: 'leitura_comprovante', lancamento_id: lancamento.id,
