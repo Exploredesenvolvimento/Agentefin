@@ -564,16 +564,36 @@
     document.getElementById('kpi-manual').textContent = percManual.toFixed(0) + '%';
   }
 
+  function opcoesCategoriaAgrupadas(categoriaIdAtual) {
+    const porTipo = { despesa: [], receita: [] };
+    todasCategorias
+      .filter(c => c.nivel >= 2 && c.ativo)
+      .sort((a, b) => a.nome.localeCompare(b.nome))
+      .forEach(c => porTipo[c.tipo].push(c));
+
+    const montarOptgroup = (rotulo, lista) => {
+      const opcoes = lista.map(c =>
+        `<option value="${c.id}" ${c.id === categoriaIdAtual ? 'selected' : ''}>${c.nome}</option>`
+      ).join('');
+      return `<optgroup label="${rotulo}">${opcoes}</optgroup>`;
+    };
+
+    return `<option value="">— Escolha a categoria —</option>`
+      + montarOptgroup('Despesas', porTipo.despesa)
+      + montarOptgroup('Receitas', porTipo.receita);
+  }
+
   function renderizarPendencias(lancamentos) {
     const box = document.getElementById('tabela-pendencias');
     const pendentes = lancamentos.filter(l => l.status === 'pendente_revisao').sort((a,b) => new Date(b.criado_em) - new Date(a.criado_em));
     if (pendentes.length === 0) { box.innerHTML = '<div class="vazio">Nenhuma pendência no momento.</div>'; return; }
-    let html = '<table><thead><tr><th>Data</th><th>Fornecedor</th><th>Valor</th><th>Motivo</th><th>Origem</th><th></th></tr></thead><tbody>';
+    let html = '<table><thead><tr><th>Data</th><th>Fornecedor</th><th>Valor</th><th>Motivo</th><th>Origem</th><th>Categoria</th><th></th></tr></thead><tbody>';
     pendentes.forEach(l => {
       const dataFmt = new Date(l.data_lancamento + 'T00:00:00').toLocaleDateString('pt-BR');
       html += `<tr>
         <td>${dataFmt}</td><td>${l.fornecedor || '—'}</td><td>${formatarMoeda(l.valor)}</td>
         <td class="motivo">${l.motivo_pendencia || '—'}</td><td><span class="tag pendente_revisao">${l.origem}</span></td>
+        <td><select id="pend-categoria-${l.id}" style="min-width:180px">${opcoesCategoriaAgrupadas(l.categoria_id)}</select></td>
         <td class="acoes">
           <button class="confirmar" onclick="revisarLancamento('${l.id}','confirmado')">Confirmar</button>
           <button class="rejeitar" onclick="revisarLancamento('${l.id}','rejeitado')">Rejeitar</button>
@@ -585,7 +605,19 @@
 
   async function revisarLancamento(id, novoStatus) {
     const { data: { user } } = await sb.auth.getUser();
-    await sb.from('lancamentos').update({ status: novoStatus, revisado_por: user.email, motivo_pendencia: null }).eq('id', id);
+    const atualizacao = { status: novoStatus, revisado_por: user.email, motivo_pendencia: null };
+
+    if (novoStatus === 'confirmado') {
+      const selectCategoria = document.getElementById(`pend-categoria-${id}`);
+      const categoriaEscolhida = selectCategoria ? selectCategoria.value : null;
+      if (!categoriaEscolhida) {
+        alert('Escolha uma categoria antes de confirmar.');
+        return;
+      }
+      atualizacao.categoria_id = categoriaEscolhida;
+    }
+
+    await sb.from('lancamentos').update(atualizacao).eq('id', id);
     await recarregarTudo();
   }
 
