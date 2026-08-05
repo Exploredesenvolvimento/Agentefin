@@ -104,6 +104,7 @@
   .tipo-toggle button { flex: 1; padding: 10px; border: 1px solid var(--linha); background: var(--fundo); border-radius: 4px; cursor: pointer; font-family: Calibri, sans-serif; color: var(--texto-suave); }
   .tipo-toggle button.selecionada.receita { background: #E9F3EC; border-color: var(--sucesso); color: var(--sucesso); font-weight: bold; }
   .tipo-toggle button.selecionada.despesa { background: #FBEAEA; border-color: var(--erro); color: var(--erro); font-weight: bold; }
+  .tipo-toggle button.selecionada.transferencia { background: #F5F0E6; border-color: var(--ouro); color: var(--bordo-escuro); font-weight: bold; }
 
   .linha-dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .categorias-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
@@ -240,6 +241,7 @@
         <div class="tipo-toggle">
           <button id="manual-btn-despesa" class="selecionada despesa" onclick="selecionarTipoManual('despesa')">Despesa</button>
           <button id="manual-btn-receita" class="receita" onclick="selecionarTipoManual('receita')">Receita</button>
+          <button id="manual-btn-transferencia" class="transferencia" onclick="selecionarTipoManual('transferencia')">Transferência</button>
         </div>
 
         <div class="linha-dupla">
@@ -286,6 +288,13 @@
 
         <div id="comp-bloco-resultado" style="display:none">
           <div class="selo-ia">✦ Sugerido pela IA — confira antes de salvar</div>
+
+          <div class="tipo-toggle">
+            <button id="comp-btn-despesa" class="selecionada despesa" onclick="selecionarTipoComp('despesa')">Despesa</button>
+            <button id="comp-btn-receita" class="receita" onclick="selecionarTipoComp('receita')">Receita</button>
+            <button id="comp-btn-transferencia" class="transferencia" onclick="selecionarTipoComp('transferencia')">Transferência</button>
+          </div>
+
           <div class="linha-dupla">
             <div><label>Data</label><input type="date" id="comp-f-data"></div>
             <div><label>Valor (R$)</label><input type="number" id="comp-f-valor" step="0.01" min="0"></div>
@@ -565,13 +574,14 @@
   }
 
   function opcoesCategoriaAgrupadas(categoriaIdAtual) {
-    const porTipo = { despesa: [], receita: [] };
+    const porTipo = { despesa: [], receita: [], transferencia: [] };
     todasCategorias
       .filter(c => c.nivel >= 2 && c.ativo)
       .sort((a, b) => a.nome.localeCompare(b.nome))
       .forEach(c => porTipo[c.tipo].push(c));
 
     const montarOptgroup = (rotulo, lista) => {
+      if (lista.length === 0) return '';
       const opcoes = lista.map(c =>
         `<option value="${c.id}" ${c.id === categoriaIdAtual ? 'selected' : ''}>${c.nome}</option>`
       ).join('');
@@ -579,6 +589,7 @@
     };
 
     return `<option value="">— Escolha a categoria —</option>`
+      + montarOptgroup('Transferências entre Contas', porTipo.transferencia)
       + montarOptgroup('Despesas', porTipo.despesa)
       + montarOptgroup('Receitas', porTipo.receita);
   }
@@ -689,6 +700,7 @@
     tipoManual = tipo;
     document.getElementById('manual-btn-despesa').classList.toggle('selecionada', tipo === 'despesa');
     document.getElementById('manual-btn-receita').classList.toggle('selecionada', tipo === 'receita');
+    document.getElementById('manual-btn-transferencia').classList.toggle('selecionada', tipo === 'transferencia');
     montarSelectGrupo('manual', tipo);
   }
 
@@ -794,11 +806,15 @@
         ? { type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: base64 } }
         : { type: 'image', source: { type: 'base64', media_type: arquivoComprovante.type, data: base64 } };
 
-      const prompt = `Você está lendo um comprovante financeiro (nota fiscal, recibo ou boleto) para uma empresa de consultoria brasileira.
+      const prompt = `Você está lendo um comprovante financeiro (nota fiscal, recibo, boleto ou print de transferência) para uma empresa de consultoria brasileira.
 Extraia os dados e sugira a categoria mais adequada da lista abaixo.
 
 CATEGORIAS DISPONÍVEIS:
 ${listaCategorias}
+
+IMPORTANTE: se o comprovante for de uma transferência entre contas do próprio titular (PIX, TED ou DOC
+sem um fornecedor ou cliente externo claro, nome do titular da empresa ou do sócio aparecendo dos dois lados
+da transação), sugira a categoria "Transferência entre Contas Próprias" em vez de uma despesa ou receita real.
 
 Responda APENAS com um JSON válido, sem markdown, sem texto antes ou depois, no formato exato:
 {"fornecedor":"nome de quem emitiu","valor":0.00,"data":"AAAA-MM-DD","descricao":"descrição curta","categoria_sugerida":"nome exato de uma categoria da lista, ou null","confianca":0,"fornecedor_reconhecido":true}
@@ -830,13 +846,20 @@ Se não conseguir ler algum campo com segurança, use null nesse campo. "confian
     document.getElementById('comp-f-descricao').value = r.descricao || '';
 
     const tipoPadrao = r.categoria_sugerida ? detectarTipoCategoriaPorNome(r.categoria_sugerida) : 'despesa';
-    montarSelectGrupo('comp', tipoPadrao);
+    selecionarTipoComp(tipoPadrao);
 
     if (r.categoria_sugerida) {
       const achou = todasCategorias.find(c => c.nome.toLowerCase() === r.categoria_sugerida.toLowerCase());
       if (achou) selecionarCadeiaCategoria('comp', achou);
     }
     atualizarPainelStatusComprovante();
+  }
+
+  function selecionarTipoComp(tipo) {
+    document.getElementById('comp-btn-despesa').classList.toggle('selecionada', tipo === 'despesa');
+    document.getElementById('comp-btn-receita').classList.toggle('selecionada', tipo === 'receita');
+    document.getElementById('comp-btn-transferencia').classList.toggle('selecionada', tipo === 'transferencia');
+    montarSelectGrupo('comp', tipo);
   }
 
   function detectarTipoCategoriaPorNome(nome) {
