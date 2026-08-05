@@ -69,7 +69,7 @@
   .atalhos-periodo { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
   .atalhos-periodo button.atalho { background: var(--fundo); border: 1px solid var(--linha); color: var(--texto-suave); padding: 6px 14px; border-radius: 14px; font-size: 0.8rem; cursor: pointer; font-family: Calibri, sans-serif; }
   .atalhos-periodo button.atalho:hover { border-color: var(--ouro); color: var(--bordo); }
-  .filtros-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; margin-top: 14px; }
+  .filtros-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 14px; margin-top: 14px; }
   .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
   .kpi { background: var(--papel); border: 1px solid var(--linha); border-radius: 6px; padding: 20px; }
   .kpi .rotulo { font-size: 0.72rem; color: var(--texto-suave); text-transform: uppercase; letter-spacing: 0.04em; }
@@ -79,6 +79,62 @@
   .kpi.receita .valor { color: var(--sucesso); }
   .kpi.despesa .valor { color: var(--erro); }
   .kpi.manual .valor { color: var(--pendente); }
+  .kpi.clicavel { cursor: pointer; transition: border-color 0.15s, box-shadow 0.15s; }
+  .kpi.clicavel:hover { border-color: var(--ouro); box-shadow: 0 2px 10px rgba(74,32,56,0.08); }
+
+  /* ===== Painel de Saldo estilo livro-razão ===== */
+  .bloco-razao { background: var(--papel); border: 1px solid var(--linha); border-radius: 8px; overflow: hidden; margin-bottom: 22px; }
+  .friso-razao { height: 6px; background: var(--bordo); position: relative; }
+  .friso-razao::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--ouro); }
+  .painel-saldo {
+    padding: 30px 32px 24px;
+    background: repeating-linear-gradient(180deg, transparent, transparent 27px, rgba(201,169,110,0.08) 28px), var(--papel);
+    border-bottom: 1px solid var(--linha);
+  }
+  .painel-saldo .rotulo-conta { font-family: Georgia, serif; font-style: italic; font-size: 0.82rem; color: var(--texto-suave); }
+  .cifra { font-family: Georgia, serif; color: var(--bordo); margin-top: 8px; display: flex; align-items: baseline; gap: 2px; flex-wrap: wrap; }
+  .cifra.negativo { color: var(--erro); }
+  .cifra .prefixo { font-size: 1.05rem; color: var(--texto-suave); margin-right: 6px; font-family: Calibri, sans-serif; letter-spacing: 0.03em; }
+  .cifra .inteiro { font-size: 2.6rem; line-height: 1; }
+  .cifra .decimal { font-size: 1.3rem; color: var(--ouro); opacity: 0.85; }
+  .cifra.negativo .decimal { color: var(--erro); opacity: 0.7; }
+  .linha-tendencia { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+  .linha-tendencia .risco { width: 30px; height: 2px; background: var(--ouro); flex-shrink: 0; }
+  .tendencia-texto { font-size: 0.85rem; }
+  .tendencia-texto.positiva { color: var(--sucesso); }
+  .tendencia-texto.negativa { color: var(--erro); }
+  .tendencia-texto .rotulo-comparacao { color: var(--texto-suave); font-size: 0.78rem; margin-left: 4px; }
+  .lancamentos-secundarios { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .linha-secundaria { padding: 16px 22px; border-right: 1px solid var(--linha); }
+  .linha-secundaria:last-child { border-right: none; }
+  .linha-secundaria.clicavel { cursor: pointer; transition: background 0.15s; }
+  .linha-secundaria.clicavel:hover { background: var(--fundo); }
+  .linha-secundaria .rotulo { font-size: 0.68rem; color: var(--texto-suave); text-transform: uppercase; letter-spacing: 0.04em; }
+  .linha-secundaria .valor { font-family: Georgia, serif; font-size: 1.15rem; margin-top: 5px; }
+  .linha-secundaria.receita .valor { color: var(--sucesso); }
+  .linha-secundaria.despesa .valor { color: var(--erro); }
+  .linha-secundaria.manual .valor { color: var(--pendente); }
+  @media (max-width: 800px) {
+    .painel-saldo { padding: 22px 20px 18px; }
+    .cifra .inteiro { font-size: 2rem; }
+    .cifra .decimal { font-size: 1.05rem; }
+    .lancamentos-secundarios { grid-template-columns: 1fr; }
+    .linha-secundaria { border-right: none; border-bottom: 1px solid var(--linha); }
+    .linha-secundaria:last-child { border-bottom: none; }
+  }
+
+  .barra-linha.clicavel { cursor: pointer; }
+  .barra-linha.clicavel:hover .nome { color: var(--bordo); font-weight: bold; }
+
+  .chip-filtro-atalho {
+    display: inline-flex; align-items: center; gap: 8px; background: var(--ouro-claro); color: var(--bordo-escuro);
+    padding: 6px 12px; border-radius: 14px; font-size: 0.82rem; margin-top: 12px;
+  }
+  .chip-filtro-atalho button {
+    background: none; border: none; color: var(--bordo-escuro); cursor: pointer; font-size: 0.9rem;
+    line-height: 1; padding: 0; opacity: 0.7;
+  }
+  .chip-filtro-atalho button:hover { opacity: 1; }
 
   .barra-linha { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
   .barra-linha .nome { width: 190px; font-size: 0.85rem; flex-shrink: 0; }
@@ -111,6 +167,14 @@
   .tipo-toggle button.selecionada.receita { background: #E9F3EC; border-color: var(--sucesso); color: var(--sucesso); font-weight: bold; }
   .tipo-toggle button.selecionada.despesa { background: #FBEAEA; border-color: var(--erro); color: var(--erro); font-weight: bold; }
   .tipo-toggle button.selecionada.transferencia { background: #F5F0E6; border-color: var(--ouro); color: var(--bordo-escuro); font-weight: bold; }
+
+  /* Seletor de "quando" (Registro Manual): não é direção de dinheiro, então
+     usa a cor da marca, não as cores de despesa/receita. */
+  .modo-toggle { display: flex; gap: 8px; margin-bottom: 26px; }
+  .modo-toggle button { flex: 1; padding: 13px; border: 1px solid var(--linha); background: var(--papel); border-radius: 4px; cursor: pointer; font-family: Calibri, sans-serif; font-size: 0.92rem; color: var(--texto-suave); }
+  .modo-toggle button.selecionada { background: var(--bordo); border-color: var(--bordo); color: #FFFFFF; font-weight: bold; }
+  .subpainel { display: none; }
+  .subpainel.ativo { display: block; animation: fadeSuave 0.2s ease; }
 
   .linha-dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .categorias-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
@@ -163,6 +227,33 @@
   .valor-receita { color: var(--sucesso); }
   .vazio { text-align: center; color: var(--texto-suave); padding: 24px; font-size: 0.85rem; }
 
+  /* Momento assinatura: flash dourado ao confirmar/rejeitar uma pendência —
+     é a ação mais repetida do dia a dia, então é o único lugar com animação
+     de destaque. O resto da interface fica quieto de propósito. */
+  @keyframes flashDourado {
+    0% { background: var(--papel); }
+    35% { background: var(--ouro-claro); }
+    100% { background: var(--papel); }
+  }
+  tr.linha-decisao { animation: flashDourado 0.5s ease; }
+  tr.linha-saindo { transition: opacity 0.25s ease, transform 0.25s ease, height 0.25s ease; opacity: 0; transform: translateX(10px); }
+
+  /* Troca de aba discreta, sem chamar atenção */
+  .secao.ativa { animation: fadeSuave 0.2s ease; }
+  @keyframes fadeSuave { from { opacity: 0; } to { opacity: 1; } }
+
+  /* Selo de contagem nas abas — só aparece quando há algo esperando */
+  .contagem-aba {
+    display: none; align-items: center; justify-content: center; min-width: 18px; height: 18px;
+    padding: 0 5px; margin-left: 7px; border-radius: 9px; background: var(--ouro); color: var(--bordo-escuro);
+    font-size: 0.68rem; font-weight: bold; vertical-align: middle;
+  }
+
+  /* Retorno visual enquanto a IA está lendo comprovante/PDF */
+  .selo-lendo { display: inline-flex; align-items: center; gap: 8px; color: var(--pendente); font-size: 0.85rem; margin-top: 12px; }
+  .selo-lendo .ponto-pulsando { width: 8px; height: 8px; border-radius: 50%; background: var(--pendente); animation: pulsar 1s ease-in-out infinite; }
+  @keyframes pulsar { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+
   @media (max-width: 800px) { .kpis { grid-template-columns: 1fr 1fr; } .filtros-grid { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 600px) {
     .linha-dupla, .categorias-grid, .mapeamento { grid-template-columns: 1fr; }
@@ -200,10 +291,12 @@
   </div>
 
   <div class="nav-abas">
-    <button id="nav-dashboard" class="ativa" onclick="mudarTab('dashboard')">Dashboard</button>
-    <button id="nav-manual" onclick="mudarTab('manual')">Lançamento Manual</button>
+    <button id="nav-dashboard" class="ativa" onclick="mudarTab('dashboard')">Dashboard<span class="contagem-aba" id="badge-dashboard"></span></button>
+    <button id="nav-registro" onclick="mudarTab('registro')">Registro Manual<span class="contagem-aba" id="badge-registro"></span></button>
     <button id="nav-comprovante" onclick="mudarTab('comprovante')">Ler Comprovante</button>
     <button id="nav-extrato" onclick="mudarTab('extrato')">Extrato Bancário</button>
+    <button id="nav-contas" onclick="mudarTab('contas')">Contas Bancárias</button>
+    <button id="nav-fechamento" onclick="mudarTab('fechamento')">Fechamento Mensal</button>
   </div>
 
   <div class="container">
@@ -222,6 +315,7 @@
         </div>
 
         <div class="filtros-grid">
+          <div><label>Buscar</label><input type="text" id="filtro-busca" placeholder="Fornecedor ou descrição" oninput="agendarBuscaDashboard()"></div>
           <div><label>De</label><input type="date" id="filtro-data-inicio" onchange="carregarDashboard()"></div>
           <div><label>Até</label><input type="date" id="filtro-data-fim" onchange="carregarDashboard()"></div>
           <div><label>Categoria</label><select id="filtro-categoria" onchange="carregarDashboard()"><option value="">Todas</option></select></div>
@@ -243,13 +337,29 @@
           </div>
           <div style="display:flex; align-items:flex-end;"><button class="secundaria" style="width:100%" onclick="limparFiltrosDashboard()">Limpar</button></div>
         </div>
+        <div class="chip-filtro-atalho" id="chip-filtro-atalho" style="display:none">
+          Filtrando por: <strong id="chip-filtro-rotulo"></strong>
+          <button onclick="limparFiltroAtalho()" aria-label="Remover filtro">✕</button>
+        </div>
       </div>
 
-      <div class="kpis">
-        <div class="kpi saldo"><div class="rotulo">Saldo</div><div class="valor" id="kpi-saldo">—</div></div>
-        <div class="kpi receita"><div class="rotulo">Receitas</div><div class="valor" id="kpi-receita">—</div></div>
-        <div class="kpi despesa"><div class="rotulo">Despesas</div><div class="valor" id="kpi-despesa">—</div></div>
-        <div class="kpi manual"><div class="rotulo">% Lançado Manualmente</div><div class="valor" id="kpi-manual">—</div></div>
+      <div class="bloco-razao">
+        <div class="friso-razao"></div>
+        <div class="painel-saldo">
+          <div class="rotulo-conta">Saldo acumulado</div>
+          <div class="cifra" id="cifra-saldo">
+            <span class="prefixo">R$</span><span class="inteiro" id="saldo-inteiro">—</span><span class="decimal" id="saldo-decimal"></span>
+          </div>
+          <div class="linha-tendencia" id="linha-tendencia" style="display:none">
+            <span class="risco"></span>
+            <span class="tendencia-texto" id="tendencia-texto"></span>
+          </div>
+        </div>
+        <div class="lancamentos-secundarios">
+          <div class="linha-secundaria receita clicavel" onclick="aplicarFiltroAtalho('direcao', 'receita', 'Só receitas')"><div class="rotulo">Receitas</div><div class="valor" id="kpi-receita">—</div></div>
+          <div class="linha-secundaria despesa clicavel" onclick="aplicarFiltroAtalho('direcao', 'despesa', 'Só despesas')"><div class="rotulo">Despesas</div><div class="valor" id="kpi-despesa">—</div></div>
+          <div class="linha-secundaria manual clicavel" onclick="document.getElementById('filtro-origem').value='manual'; carregarDashboard(); document.getElementById('tabela-lancamentos-filtrados').scrollIntoView({behavior:'smooth', block:'start'});"><div class="rotulo">% Lançado Manualmente</div><div class="valor" id="kpi-manual">—</div></div>
+        </div>
       </div>
 
       <div class="card">
@@ -289,7 +399,15 @@
     </div>
 
     <!-- ===================== LANÇAMENTO MANUAL ===================== -->
-    <div id="secao-manual" class="secao">
+    <div id="secao-registro" class="secao">
+      <div class="modo-toggle">
+        <button id="modo-btn-aconteceu" class="selecionada" onclick="mudarSubPainelRegistro('aconteceu')">Aconteceu agora</button>
+        <button id="modo-btn-futuro" onclick="mudarSubPainelRegistro('futuro')">Vai acontecer</button>
+        <button id="modo-btn-recorrente" onclick="mudarSubPainelRegistro('recorrente')">Se repete todo mês</button>
+      </div>
+
+      <!-- ===== ACONTECEU AGORA (era "Lançamento Manual") ===== -->
+      <div id="subpainel-aconteceu" class="subpainel ativo">
       <div class="card">
         <h2>Novo lançamento manual</h2>
         <p class="legenda">Para quando não há comprovante.</p>
@@ -305,7 +423,7 @@
           <div><label>Valor (R$)</label><input type="number" id="manual-f-valor" step="0.01" min="0" placeholder="0,00"></div>
         </div>
         <label>Fornecedor / Cliente</label>
-        <input type="text" id="manual-f-fornecedor">
+        <input type="text" id="manual-f-fornecedor" onblur="autoPreencherCategoriaPorFornecedor('manual', this.value)">
         <label>Descrição (opcional)</label>
         <textarea id="manual-f-descricao" rows="2"></textarea>
 
@@ -326,6 +444,79 @@
         <h2>Últimos lançamentos manuais</h2>
         <div id="manual-lista"><div class="vazio">Carregando…</div></div>
       </div>
+      </div>
+
+      <!-- ===== VAI ACONTECER (era "Contas a Pagar/Receber") ===== -->
+      <div id="subpainel-futuro" class="subpainel">
+      <div class="card">
+        <h2>Novo compromisso</h2>
+        <p class="legenda">Registra algo que ainda vai acontecer — o valor só vira lançamento de verdade quando você confirmar o pagamento/recebimento.</p>
+
+        <div class="tipo-toggle">
+          <button id="cpr-btn-pagar" class="selecionada despesa" onclick="selecionarTipoCompromisso('pagar')">A Pagar</button>
+          <button id="cpr-btn-receber" class="receita" onclick="selecionarTipoCompromisso('receber')">A Receber</button>
+        </div>
+
+        <div class="linha-dupla">
+          <div><label>Vencimento</label><input type="date" id="cpr-f-vencimento"></div>
+          <div><label>Valor (R$)</label><input type="number" id="cpr-f-valor" step="0.01" min="0" placeholder="0,00"></div>
+        </div>
+        <label id="cpr-label-fornecedor">Fornecedor</label>
+        <input type="text" id="cpr-f-fornecedor" onblur="autoPreencherCategoriaPorFornecedor('cpr', this.value)">
+        <label>Descrição</label>
+        <input type="text" id="cpr-f-descricao">
+
+        <div class="categorias-grid">
+          <div><label>Grupo</label><select id="cpr-sel-grupo" onchange="carregarFilhos('cpr', 1)"><option value="">Selecione…</option></select></div>
+          <div><label>Categoria</label><select id="cpr-sel-categoria" onchange="carregarFilhos('cpr', 2)" disabled><option value="">—</option></select></div>
+          <div><label>Subcategoria</label><select id="cpr-sel-subcategoria" onchange="carregarFilhos('cpr', 3)" disabled><option value="">—</option></select></div>
+          <div><label>Item</label><select id="cpr-sel-item" disabled><option value="">—</option></select></div>
+        </div>
+
+        <button class="principal largo" id="cpr-btn-salvar" onclick="salvarCompromisso()">Registrar compromisso</button>
+        <div id="cpr-form-msg"></div>
+      </div>
+
+      <div class="card">
+        <h2>A Pagar</h2>
+        <div id="cpr-lista-pagar"><div class="vazio">Carregando…</div></div>
+      </div>
+
+      <div class="card">
+        <h2>A Receber</h2>
+        <div id="cpr-lista-receber"><div class="vazio">Carregando…</div></div>
+      </div>
+      </div>
+
+      <!-- ===== SE REPETE TODO MÊS (era o card "Despesas Recorrentes") ===== -->
+      <div id="subpainel-recorrente" class="subpainel">
+      <div class="card">
+        <h2>Despesas Recorrentes</h2>
+        <p class="legenda">Modelos de despesa fixa mensal (aluguel, assinaturas, mensalidades). Toda vez que o portal é aberto, gera automaticamente o compromisso do mês em "A Pagar", uma vez por modelo ativo.</p>
+
+        <div class="linha-dupla">
+          <div><label>Dia do vencimento (1 a 28)</label><input type="number" id="rec-f-dia" min="1" max="28" step="1"></div>
+          <div><label>Valor (R$)</label><input type="number" id="rec-f-valor" step="0.01" min="0" placeholder="0,00"></div>
+        </div>
+        <label>Fornecedor</label>
+        <input type="text" id="rec-f-fornecedor">
+        <label>Descrição</label>
+        <input type="text" id="rec-f-descricao">
+
+        <div class="categorias-grid">
+          <div><label>Grupo</label><select id="rec-sel-grupo" onchange="carregarFilhos('rec', 1)"><option value="">Selecione…</option></select></div>
+          <div><label>Categoria</label><select id="rec-sel-categoria" onchange="carregarFilhos('rec', 2)" disabled><option value="">—</option></select></div>
+          <div><label>Subcategoria</label><select id="rec-sel-subcategoria" onchange="carregarFilhos('rec', 3)" disabled><option value="">—</option></select></div>
+          <div><label>Item</label><select id="rec-sel-item" disabled><option value="">—</option></select></div>
+        </div>
+
+        <button class="principal largo" id="rec-btn-salvar" onclick="salvarRecorrente()">Criar despesa recorrente</button>
+        <div id="rec-form-msg"></div>
+
+        <div id="rec-lista" style="margin-top:18px"><div class="vazio">Carregando…</div></div>
+      </div>
+      </div>
+
     </div>
 
     <!-- ===================== LEITURA DE COMPROVANTE ===================== -->
@@ -389,6 +580,10 @@
           <span>CSV — precisa mapear colunas</span>
           <span>PDF — lido por IA, sempre revisar</span>
         </div>
+        <div style="margin-top:14px">
+          <label>Conta bancária (opcional — deixe em branco se ainda não tiver contas conectadas)</label><br>
+          <select id="ext-select-conta"><option value="">Não especificada</option></select>
+        </div>
         <div class="zona-upload" id="ext-zona-upload" onclick="document.getElementById('ext-input-arquivo').click()">
           <strong>Clique para escolher</strong> ou arraste o arquivo aqui (.ofx, .csv ou .pdf)
           <input type="file" id="ext-input-arquivo" accept=".ofx,.csv,application/pdf" style="display:none">
@@ -432,6 +627,48 @@
       </div>
     </div>
 
+    <!-- ===================== CONTAS BANCÁRIAS ===================== -->
+    <div id="secao-contas" class="secao">
+      <div class="card">
+        <h2>Contas conectadas</h2>
+        <p class="legenda">Saldo trazido automaticamente pelo Make via Open Finance (Pluggy). Atualiza sozinho, sem precisar importar extrato.</p>
+        <div id="contas-lista"><div class="vazio">Carregando…</div></div>
+      </div>
+    </div>
+
+    <!-- ===================== FECHAMENTO MENSAL ===================== -->
+    <div id="secao-fechamento" class="secao">
+      <div class="card">
+        <h2>Fechamento Mensal</h2>
+        <p class="legenda">DRE gerencial e indicadores do mês, seguindo a estrutura do POPFIN2026.4. O fechamento fica bloqueado se houver lançamento não classificado ou pendente de revisão — é assim de propósito, pra não fechar o mês com dado incompleto.</p>
+        <div style="display:flex; gap:12px; align-items:flex-end; margin-top:14px; flex-wrap:wrap">
+          <div><label>Mês</label><br><input type="month" id="fech-mes"></div>
+          <button class="principal" onclick="gerarFechamento()">Gerar Fechamento</button>
+        </div>
+        <div id="fech-msg-bloqueio"></div>
+      </div>
+
+      <div class="card" id="fech-card-dre" style="display:none">
+        <h2>DRE Gerencial</h2>
+        <div id="fech-tabela-dre"></div>
+        <p class="legenda" id="fech-nota-capex" style="margin-top:12px"></p>
+      </div>
+
+      <div class="card" id="fech-card-kpis" style="display:none">
+        <h2>Indicadores</h2>
+        <div class="kpis" id="fech-kpis"></div>
+        <p class="legenda" style="margin-top:12px">Posição de Caixa aqui é uma estimativa (receita − despesa acumulada), não o saldo real do banco — isso muda quando a conta bancária estiver conectada via Pluggy. DSO e Receita Recorrente dependem do módulo de faturamento (POPFIN2026.1), ainda não implementado no agentefin.</p>
+        <button class="principal" style="margin-top:16px" onclick="salvarFechamento()">Confirmar e Salvar Fechamento</button>
+        <div id="fech-salvar-msg"></div>
+      </div>
+
+      <div class="card">
+        <h2>Histórico de Fechamentos</h2>
+        <p class="legenda">Série histórica dos meses já fechados e salvos.</p>
+        <div id="fech-historico"><div class="vazio">Carregando…</div></div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -453,6 +690,7 @@
   let linhasParaConciliar = [];
   let formatoAtual = null;
   let csvBruto = null;
+  let ultimoFechamentoCalculado = null;
 
   // ================= LOGIN =================
   function mudarAbaLogin(aba) {
@@ -495,7 +733,11 @@
     document.getElementById('manual-f-data').valueAsDate = new Date();
     await carregarCategorias();
     selecionarTipoManual('despesa');
+    selecionarTipoCompromisso('pagar');
+    montarSelectGrupo('rec', 'despesa');
+    mudarSubPainelRegistro('aconteceu');
     montarFiltroCategoriaDashboard();
+    await gerarComprovantesRecorrentes();
     await recarregarTudo();
   }
 
@@ -507,11 +749,13 @@
   }
 
   function limparFiltrosDashboard() {
+    document.getElementById('filtro-busca').value = '';
     document.getElementById('filtro-data-inicio').value = '';
     document.getElementById('filtro-data-fim').value = '';
     document.getElementById('filtro-categoria').value = '';
     document.getElementById('filtro-status').value = '';
     document.getElementById('filtro-origem').value = '';
+    limparFiltroAtalho(true);
     carregarDashboard();
   }
 
@@ -551,16 +795,34 @@
       carregarLancamentosManual(),
       carregarLancamentosComprovante(),
       carregarExtratosRecentes(),
+      carregarContas(),
+      carregarCompromissos(),
+      carregarRecorrentes(),
     ]);
   }
 
   // ================= NAVEGAÇÃO POR ABAS =================
   function mudarTab(nome) {
-    ['dashboard', 'manual', 'comprovante', 'extrato'].forEach(n => {
+    ['dashboard', 'registro', 'comprovante', 'extrato', 'contas', 'fechamento'].forEach(n => {
       document.getElementById('secao-' + n).classList.toggle('ativa', n === nome);
       document.getElementById('nav-' + n).classList.toggle('ativa', n === nome);
     });
     if (nome === 'dashboard') carregarDashboard();
+    if (nome === 'contas') carregarContas();
+    if (nome === 'fechamento') prepararFechamento();
+    if (nome === 'registro') { carregarLancamentosManual(); carregarCompromissos(); carregarRecorrentes(); }
+  }
+
+  // Alterna qual dos 3 sub-painéis do Registro Manual aparece — a mesma ideia
+  // do tipo-toggle, mas na cor da marca porque aqui a escolha é "quando",
+  // não "que tipo de dinheiro".
+  let modoRegistro = 'aconteceu';
+  function mudarSubPainelRegistro(modo) {
+    modoRegistro = modo;
+    ['aconteceu', 'futuro', 'recorrente'].forEach(m => {
+      document.getElementById('subpainel-' + m).classList.toggle('ativo', m === modo);
+      document.getElementById('modo-btn-' + m).classList.toggle('selecionada', m === modo);
+    });
   }
 
   // ================= CASCATA DE CATEGORIAS (genérica, usada por manual e comprovante) =================
@@ -622,6 +884,35 @@
     });
   }
 
+  // Poupa cliques: se o fornecedor digitado já tem histórico de classificação
+  // (mesma memória usada pela conciliação automática), preenche a cascata de
+  // categoria sozinho — trocando despesa/receita se for preciso pra bater com
+  // a categoria conhecida.
+  async function autoPreencherCategoriaPorFornecedor(prefixo, fornecedorTexto) {
+    const nome = (fornecedorTexto || '').trim();
+    if (!nome) return;
+    const normalizado = nome.toUpperCase().replace(/\s+/g, ' ');
+
+    const { data: conhecido } = await sb.from('fornecedores_conhecidos')
+      .select('categoria_id').eq('fornecedor_normalizado', normalizado).maybeSingle();
+    if (!conhecido || !conhecido.categoria_id) return;
+
+    const categoria = mapaCategorias[conhecido.categoria_id];
+    if (!categoria) return;
+
+    if (prefixo === 'manual' && categoria.tipo !== tipoManual) {
+      selecionarTipoManual(categoria.tipo);
+    } else if (prefixo === 'cpr') {
+      const tipoCompatível = categoria.tipo === 'despesa' ? 'pagar' : categoria.tipo === 'receita' ? 'receber' : null;
+      if (tipoCompatível && tipoCompatível !== tipoCompromisso) selecionarTipoCompromisso(tipoCompatível);
+      if (!tipoCompatível) return; // categoria de transferência não se aplica a compromisso futuro
+    } else if (prefixo === 'rec' && categoria.tipo !== 'despesa') {
+      return; // despesa recorrente só aceita categoria de despesa
+    }
+
+    selecionarCadeiaCategoria(prefixo, categoria);
+  }
+
   function resolverGrupo(categoriaId) {
     let atual = mapaCategorias[categoriaId];
     while (atual && atual.nivel > 1) atual = mapaCategorias[atual.categoria_pai_id];
@@ -635,6 +926,13 @@
 
   function formatarMoeda(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
 
+  function atualizarBadgeAba(elId, contagem) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.textContent = contagem > 0 ? String(contagem) : '';
+    el.style.display = contagem > 0 ? 'inline-flex' : 'none';
+  }
+
   function arquivoParaBase64(file) {
     return new Promise((resolve, reject) => {
       const r = new FileReader();
@@ -645,9 +943,12 @@
   }
 
   // ================= DASHBOARD =================
+  let filtroAtalho = null; // { tipo: 'grupo'|'direcao', valor, rotulo } — setado pelos cliques no gráfico e nos KPIs
+  let timeoutBuscaDashboard = null;
+
   async function carregarDashboard() {
     const { data: lancamentos, error } = await sb.from('lancamentos')
-      .select('id, data_lancamento, valor, fornecedor, origem, status, motivo_pendencia, categoria_id, criado_em');
+      .select('id, data_lancamento, valor, fornecedor, descricao, origem, status, motivo_pendencia, categoria_id, criado_em');
     if (error) { console.error(error); return; }
 
     // Pendências nunca são filtradas: precisam aparecer sempre, senão o Joaquim esquece de revisar algo.
@@ -655,13 +956,38 @@
 
     const filtrados = aplicarFiltrosDashboard(lancamentos);
     renderizarKpis(filtrados);
+    atualizarSaldoHero();
     renderizarCategoriasDash(filtrados);
     renderizarMensal(filtrados);
     renderizarOrigem(filtrados);
     renderizarListaFiltrada(filtrados);
   }
 
+  // Busca por texto dispara depois de uma pequena pausa de digitação, pra não
+  // consultar o Supabase a cada letra.
+  function agendarBuscaDashboard() {
+    clearTimeout(timeoutBuscaDashboard);
+    timeoutBuscaDashboard = setTimeout(carregarDashboard, 350);
+  }
+
+  // Atalhos que não têm um <select> próprio: clicar num grupo do gráfico de
+  // categorias, ou num KPI de Receita/Despesa. Um de cada vez, pra não confundir.
+  function aplicarFiltroAtalho(tipo, valor, rotulo) {
+    filtroAtalho = { tipo, valor };
+    document.getElementById('chip-filtro-rotulo').textContent = rotulo;
+    document.getElementById('chip-filtro-atalho').style.display = 'inline-flex';
+    carregarDashboard();
+    document.getElementById('tabela-lancamentos-filtrados').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function limparFiltroAtalho(semRecarregar = false) {
+    filtroAtalho = null;
+    document.getElementById('chip-filtro-atalho').style.display = 'none';
+    if (!semRecarregar) carregarDashboard();
+  }
+
   function aplicarFiltrosDashboard(lancamentos) {
+    const busca = document.getElementById('filtro-busca').value.trim().toLowerCase();
     const dataInicio = document.getElementById('filtro-data-inicio').value;
     const dataFim = document.getElementById('filtro-data-fim').value;
     const categoriaId = document.getElementById('filtro-categoria').value;
@@ -669,11 +995,19 @@
     const origem = document.getElementById('filtro-origem').value;
 
     return lancamentos.filter(l => {
+      if (busca) {
+        const alvo = `${l.fornecedor || ''} ${l.descricao || ''}`.toLowerCase();
+        if (!alvo.includes(busca)) return false;
+      }
       if (dataInicio && l.data_lancamento < dataInicio) return false;
       if (dataFim && l.data_lancamento > dataFim) return false;
       if (categoriaId && l.categoria_id !== categoriaId) return false;
       if (status && l.status !== status) return false;
       if (origem && l.origem !== origem) return false;
+      if (filtroAtalho) {
+        if (filtroAtalho.tipo === 'grupo' && resolverGrupo(l.categoria_id) !== filtroAtalho.valor) return false;
+        if (filtroAtalho.tipo === 'direcao' && tipoDaCategoria(l.categoria_id) !== filtroAtalho.valor) return false;
+      }
       return true;
     });
   }
@@ -688,7 +1022,7 @@
 
     contagem.textContent = `${ordenados.length} lançamento${ordenados.length === 1 ? '' : 's'} encontrado${ordenados.length === 1 ? '' : 's'}.`;
 
-    if (ordenados.length === 0) { box.innerHTML = '<div class="vazio">Nenhum lançamento com esse filtro.</div>'; return; }
+    if (ordenados.length === 0) { box.innerHTML = '<div class="vazio">Nenhum lançamento bate com esse filtro. Ajuste o período ou a categoria.</div>'; return; }
 
     let html = '<table><thead><tr><th>Data</th><th>Fornecedor</th><th>Categoria</th><th>Origem</th><th>Valor</th><th>Status</th><th></th></tr></thead><tbody>';
     ordenados.forEach(l => {
@@ -886,14 +1220,65 @@
     const validos = lancamentos.filter(l => l.status !== 'rejeitado');
     const totalReceita = validos.filter(l => tipoDaCategoria(l.categoria_id) === 'receita').reduce((s, l) => s + Number(l.valor), 0);
     const totalDespesa = validos.filter(l => tipoDaCategoria(l.categoria_id) === 'despesa').reduce((s, l) => s + Number(l.valor), 0);
-    const saldo = totalReceita - totalDespesa;
     const percManual = validos.length ? (validos.filter(l => l.origem === 'manual').length / validos.length * 100) : 0;
-    const elSaldo = document.getElementById('kpi-saldo');
-    elSaldo.textContent = formatarMoeda(saldo);
-    elSaldo.className = 'valor ' + (saldo >= 0 ? 'positivo' : 'negativo');
     document.getElementById('kpi-receita').textContent = formatarMoeda(totalReceita);
     document.getElementById('kpi-despesa').textContent = formatarMoeda(totalDespesa);
     document.getElementById('kpi-manual').textContent = percManual.toFixed(0) + '%';
+  }
+
+  // Separa a parte inteira da decimal pro tratamento tipográfico do painel de
+  // saldo (centavos menores, em ouro — truque que fintechs sérias usam pra
+  // guiar o olho direto ao número que importa).
+  function formatarMoedaPartes(v) {
+    const negativo = Number(v) < 0;
+    const formatado = Math.abs(Number(v)).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    const [inteiro, decimal] = formatado.split(',');
+    return { negativo, inteiro, decimal };
+  }
+
+  // O Saldo do painel-herói é sempre o total acumulado de verdade — nunca
+  // respeita os filtros do dashboard (esses só afetam Receitas/Despesas/%
+  // Manual e a lista abaixo). Mesma filosofia da Mercury: o número principal
+  // é uma verdade fixa, não algo que muda dependendo do que você filtrou.
+  async function saldoAcumuladoAte(dataLimiteISO) {
+    const { data } = await sb.from('lancamentos')
+      .select('valor, categoria_id, status')
+      .lte('data_lancamento', dataLimiteISO)
+      .neq('status', 'rejeitado');
+    return (data || []).reduce((s, l) => {
+      const tipo = tipoDaCategoria(l.categoria_id);
+      if (tipo === 'receita') return s + Number(l.valor);
+      if (tipo === 'despesa') return s - Number(l.valor);
+      return s;
+    }, 0);
+  }
+
+  async function atualizarSaldoHero() {
+    const hoje = new Date();
+    const paraISO = d => d.toISOString().slice(0, 10);
+    const mesmoDiaMesPassado = new Date(hoje.getFullYear(), hoje.getMonth() - 1, hoje.getDate());
+
+    const [saldoHoje, saldoMesPassado] = await Promise.all([
+      saldoAcumuladoAte(paraISO(hoje)),
+      saldoAcumuladoAte(paraISO(mesmoDiaMesPassado)),
+    ]);
+
+    const { negativo, inteiro, decimal } = formatarMoedaPartes(saldoHoje);
+    document.getElementById('saldo-inteiro').textContent = inteiro;
+    document.getElementById('saldo-decimal').textContent = ',' + decimal;
+    document.getElementById('cifra-saldo').classList.toggle('negativo', negativo);
+
+    const elTendencia = document.getElementById('linha-tendencia');
+    const elTexto = document.getElementById('tendencia-texto');
+    if (saldoMesPassado === 0) {
+      elTendencia.style.display = 'none';
+    } else {
+      const variacao = ((saldoHoje - saldoMesPassado) / Math.abs(saldoMesPassado)) * 100;
+      const seta = variacao >= 0 ? '▲' : '▼';
+      elTexto.className = 'tendencia-texto ' + (variacao >= 0 ? 'positiva' : 'negativa');
+      elTexto.innerHTML = `${seta} ${Math.abs(variacao).toFixed(0)}%<span class="rotulo-comparacao">vs. mesmo dia do mês passado</span>`;
+      elTendencia.style.display = 'flex';
+    }
   }
 
   function opcoesCategoriaAgrupadas(categoriaIdAtual) {
@@ -920,7 +1305,8 @@
   function renderizarPendencias(lancamentos) {
     const box = document.getElementById('tabela-pendencias');
     const pendentes = lancamentos.filter(l => l.status === 'pendente_revisao').sort((a,b) => new Date(b.criado_em) - new Date(a.criado_em));
-    if (pendentes.length === 0) { box.innerHTML = '<div class="vazio">Nenhuma pendência no momento.</div>'; return; }
+    atualizarBadgeAba('badge-dashboard', pendentes.length);
+    if (pendentes.length === 0) { box.innerHTML = '<div class="vazio">Tudo revisado. Nada esperando por você aqui.</div>'; return; }
 
     let html = `
       <div class="acoes-lote">
@@ -930,15 +1316,22 @@
       </div>
       <table><thead><tr>
         <th><input type="checkbox" id="check-todas-pendencias" onchange="alternarTodasPendencias(this.checked)"></th>
-        <th>Data</th><th>Fornecedor</th><th>Valor</th><th>Motivo</th><th>Origem</th><th>Categoria</th><th></th>
+        <th>Data</th><th>Fornecedor</th><th>Valor</th><th>Motivo</th><th>Origem</th><th>Idade</th><th>Categoria</th><th></th>
       </tr></thead><tbody>`;
 
     pendentes.forEach(l => {
       const dataFmt = new Date(l.data_lancamento + 'T00:00:00').toLocaleDateString('pt-BR');
+      const diasParado = Math.floor((new Date() - new Date(l.criado_em)) / 86400000);
+      const rotuloIdade = diasParado === 0 ? 'hoje' : diasParado === 1 ? 'há 1 dia' : `há ${diasParado} dias`;
+      const tagIdade = diasParado >= 7
+        ? `<span class="tag divergente">${rotuloIdade}</span>`
+        : `<span class="tag pendente_revisao">${rotuloIdade}</span>`;
       html += `<tr>
         <td><input type="checkbox" class="check-pendencia" data-id="${l.id}" onchange="atualizarContagemSelecao()"></td>
         <td>${dataFmt}</td><td>${l.fornecedor || '—'}</td><td>${formatarMoeda(l.valor)}</td>
-        <td class="motivo">${l.motivo_pendencia || '—'}</td><td><span class="tag pendente_revisao">${l.origem}</span></td>
+        <td class="motivo">${l.motivo_pendencia || '—'}</td>
+        <td><span class="tag pendente_revisao">${l.origem}</span></td>
+        <td>${tagIdade}</td>
         <td><select id="pend-categoria-${l.id}" style="min-width:180px">${opcoesCategoriaAgrupadas(l.categoria_id)}</select></td>
         <td class="acoes">
           <button class="confirmar" onclick="revisarLancamentoIndividual('${l.id}','confirmado')">Confirmar</button>
@@ -1032,7 +1425,27 @@
       alert('Escolha uma categoria antes de confirmar.');
       return;
     }
+    await animarSaidaPendencias([id]);
     await recarregarTudo();
+  }
+
+  // Flash dourado (decisão tomada) seguido de colapso suave da linha — o único
+  // momento de destaque visual da interface, reservado pra ação mais repetida
+  // do dia a dia: revisar e decidir uma pendência.
+  function animarSaidaPendencias(ids) {
+    return new Promise(resolve => {
+      const linhas = ids
+        .map(id => document.querySelector(`.check-pendencia[data-id="${id}"]`))
+        .filter(Boolean)
+        .map(cb => cb.closest('tr'))
+        .filter(Boolean);
+      if (linhas.length === 0) { resolve(); return; }
+      linhas.forEach(l => l.classList.add('linha-decisao'));
+      setTimeout(() => {
+        linhas.forEach(l => l.classList.add('linha-saindo'));
+        setTimeout(resolve, 260);
+      }, 260);
+    });
   }
 
   async function confirmarSelecionadas() {
@@ -1045,6 +1458,7 @@
       if (!resultado.ok) semCategoria.push(id);
     }
 
+    await animarSaidaPendencias(ids.filter(id => !semCategoria.includes(id)));
     await recarregarTudo();
 
     if (semCategoria.length > 0) {
@@ -1060,6 +1474,7 @@
     for (const id of ids) {
       await revisarLancamento(id, 'rejeitado', true);
     }
+    await animarSaidaPendencias(ids);
     await recarregarTudo();
   }
 
@@ -1074,7 +1489,8 @@
     let html = '';
     ordenado.forEach(([nome, valor]) => {
       const pct = (valor / max * 100).toFixed(1);
-      html += `<div class="barra-linha"><div class="nome">${nome}</div><div class="trilha"><div class="preenchimento" style="width:${pct}%"></div></div><div class="valor">${formatarMoeda(valor)}</div></div>`;
+      const nomeEscapado = nome.replace(/'/g, "\\'");
+      html += `<div class="barra-linha clicavel" onclick="aplicarFiltroAtalho('grupo', '${nomeEscapado}', 'Categoria: ${nomeEscapado}')"><div class="nome">${nome}</div><div class="trilha"><div class="preenchimento" style="width:${pct}%"></div></div><div class="valor">${formatarMoeda(valor)}</div></div>`;
     });
     box.innerHTML = html;
   }
@@ -1183,7 +1599,7 @@
       .select('id, data_lancamento, valor, fornecedor, origem, status, categorias(nome, tipo)')
       .order('criado_em', { ascending: false }).limit(10);
     if (error) { lista.innerHTML = `<div class="vazio">Erro: ${error.message}</div>`; return; }
-    if (!data || data.length === 0) { lista.innerHTML = '<div class="vazio">Nenhum lançamento ainda.</div>'; return; }
+    if (!data || data.length === 0) { lista.innerHTML = '<div class="vazio">Nenhum lançamento manual ainda. O que não tiver comprovante, entra por aqui.</div>'; return; }
     let html = '<table><thead><tr><th>Data</th><th>Fornecedor</th><th>Categoria</th><th>Origem</th><th>Valor</th><th>Status</th></tr></thead><tbody>';
     data.forEach(l => {
       const tipo = l.categorias ? l.categorias.tipo : null;
@@ -1228,7 +1644,8 @@
     if (!arquivoComprovante) return;
     const msgBox = document.getElementById('comp-analise-msg');
     const btn = document.getElementById('comp-btn-analisar');
-    btn.disabled = true; btn.textContent = 'Analisando…'; msgBox.innerHTML = '';
+    btn.disabled = true; btn.textContent = 'Analisando…';
+    msgBox.innerHTML = '<div class="selo-lendo"><span class="ponto-pulsando"></span>Lendo o comprovante…</div>';
 
     try {
       const base64 = await arquivoParaBase64(arquivoComprovante);
@@ -1260,6 +1677,7 @@ Se não conseguir ler algum campo com segurança, use null nesse campo. "confian
       const data = await response.json();
       const textoResposta = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('\n');
       resultadoIA = JSON.parse(textoResposta.replace(/```json|```/g, '').trim());
+      msgBox.innerHTML = '';
       preencherFormularioComprovante(resultadoIA);
     } catch (err) {
       console.error(err);
@@ -1381,7 +1799,7 @@ Se não conseguir ler algum campo com segurança, use null nesse campo. "confian
       .select('id, data_lancamento, valor, fornecedor, status, comprovante_url, categorias(nome, tipo)')
       .eq('origem', 'comprovante').order('criado_em', { ascending: false }).limit(10);
     if (error) { lista.innerHTML = `<div class="vazio">Erro: ${error.message}</div>`; return; }
-    if (!data || data.length === 0) { lista.innerHTML = '<div class="vazio">Nenhum comprovante lançado ainda.</div>'; return; }
+    if (!data || data.length === 0) { lista.innerHTML = '<div class="vazio">Nenhum comprovante lançado ainda. Suba uma imagem ou PDF acima.</div>'; return; }
     let html = '<table><thead><tr><th>Data</th><th>Fornecedor</th><th>Categoria</th><th>Valor</th><th>Status</th><th></th></tr></thead><tbody>';
     data.forEach(l => {
       const tipo = l.categorias ? l.categorias.tipo : null;
@@ -1432,7 +1850,7 @@ Se não conseguir ler algum campo com segurança, use null nesse campo. "confian
       prepararMapeamentoCsv(csvBruto);
     } else if (file.type === 'application/pdf') {
       formatoAtual = 'pdf';
-      document.getElementById('ext-msg-upload').innerHTML = '<div class="msg info">Lendo PDF com IA, pode levar alguns segundos…</div>';
+      document.getElementById('ext-msg-upload').innerHTML = '<div class="selo-lendo"><span class="ponto-pulsando"></span>Lendo o extrato em PDF…</div>';
       try {
         const linhas = await lerExtratoPdfComIA(file);
         document.getElementById('ext-msg-upload').innerHTML = '<div class="msg info">PDF é uma "foto" do extrato: confira cada linha antes de conciliar.</div>';
@@ -1534,20 +1952,44 @@ Responda APENAS com um JSON válido, sem markdown, no formato:
     document.getElementById('ext-conciliar-msg').innerHTML = '';
     let conciliados = 0, pendentes = 0;
     const resultados = [];
+    const contaSelecionada = document.getElementById('ext-select-conta').value || null;
 
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) {
+      document.getElementById('ext-conciliar-msg').innerHTML = '<div class="msg erro">Sessão expirada. Recarregue a página e entre de novo.</div>';
+      btn.disabled = false; btn.textContent = 'Conciliar com os lançamentos';
+      return;
+    }
+
+    // Fala com a mesma Edge Function que o Make usa (agente-financeiro), em vez
+    // de duplicar a lógica de match aqui. Ganho real: linha sem correspondência
+    // agora também passa pela memória de fornecedor e pela IA, igual à rota
+    // automática — antes, subir extrato pela tela era mais limitado que o Make.
     for (const linha of linhasParaConciliar) {
-      const { data: candidatos } = await sb.from('lancamentos').select('id')
-        .eq('data_lancamento', linha.data).eq('valor', linha.valor).eq('conciliado_com_extrato', false);
-      let status = 'sem_correspondencia', lancamentoId = null;
-      if (candidatos && candidatos.length === 1) { status = 'conciliado'; lancamentoId = candidatos[0].id; conciliados++; }
-      else if (candidatos && candidatos.length > 1) { status = 'divergente'; pendentes++; }
-      else { pendentes++; }
-
-      const { error } = await sb.from('extratos_importados').insert({
-        data_movimentacao: linha.data, valor: linha.valor, descricao_banco: linha.descricao || null,
-        formato_origem: formatoAtual, status_conciliacao: status, lancamento_id: lancamentoId,
-      });
-      if (!error && lancamentoId) await sb.from('lancamentos').update({ conciliado_com_extrato: true }).eq('id', lancamentoId);
+      const valorComSinal = linha.tipo === 'saída' ? -Math.abs(linha.valor) : Math.abs(linha.valor);
+      let status = 'sem_correspondencia';
+      try {
+        const resposta = await fetch(`${SUPABASE_URL}/functions/v1/agente-financeiro`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` },
+          body: JSON.stringify({
+            acao: 'conciliar_extrato',
+            payload: {
+              data_movimentacao: linha.data,
+              valor: valorComSinal,
+              descricao_banco: linha.descricao || null,
+              formato_origem: formatoAtual,
+              conta_bancaria_id: contaSelecionada,
+            },
+          }),
+        });
+        const resultado = await resposta.json();
+        if (!resposta.ok) throw new Error(resultado.erro || 'Falha ao conciliar.');
+        status = resultado.status;
+      } catch (err) {
+        console.error('Erro ao conciliar linha via Edge Function:', err);
+      }
+      if (status === 'conciliado') conciliados++; else pendentes++;
       resultados.push({ ...linha, status });
     }
 
@@ -1575,7 +2017,7 @@ Responda APENAS com um JSON válido, sem markdown, no formato:
       .select('data_movimentacao, valor, descricao_banco, formato_origem, status_conciliacao')
       .order('importado_em', { ascending: false }).limit(10);
     if (error) { lista.innerHTML = `<div class="vazio">Erro: ${error.message}</div>`; return; }
-    if (!data || data.length === 0) { lista.innerHTML = '<div class="vazio">Nenhuma importação ainda.</div>'; return; }
+    if (!data || data.length === 0) { lista.innerHTML = '<div class="vazio">Nenhum extrato importado ainda.</div>'; return; }
     let html = '<table><thead><tr><th>Data</th><th>Descrição</th><th>Formato</th><th>Valor</th><th>Status</th></tr></thead><tbody>';
     data.forEach(e => {
       const dataFmt = new Date(e.data_movimentacao + 'T00:00:00').toLocaleDateString('pt-BR');
@@ -1584,6 +2026,418 @@ Responda APENAS com um JSON válido, sem markdown, no formato:
     });
     html += '</tbody></table>';
     lista.innerHTML = html;
+  }
+
+  async function carregarContas() {
+    const lista = document.getElementById('contas-lista');
+    const { data, error } = await sb.from('contas_bancarias')
+      .select('id, apelido, nome_banco, saldo, saldo_atualizado_em, status')
+      .order('apelido', { ascending: true });
+    if (error) { lista.innerHTML = `<div class="vazio">Erro: ${error.message}</div>`; return; }
+
+    // Reaproveita o mesmo resultado pra popular o seletor da aba de extrato,
+    // sem precisar de uma segunda consulta.
+    const selectExtrato = document.getElementById('ext-select-conta');
+    if (selectExtrato) {
+      const valorAtual = selectExtrato.value;
+      selectExtrato.innerHTML = '<option value="">Não especificada</option>' +
+        (data || []).map(c => `<option value="${c.id}">${c.apelido} · ${c.nome_banco}</option>`).join('');
+      selectExtrato.value = valorAtual;
+    }
+
+    if (!data || data.length === 0) {
+      lista.innerHTML = '<div class="vazio">Nenhuma conta conectada ainda. Assim que a integração com a Pluggy estiver ativa no Make, os saldos aparecem aqui automaticamente.</div>';
+      return;
+    }
+    const rotuloStatus = { conectado: 'Conectado', desconectado: 'Desconectado', erro: 'Erro na conexão' };
+    let html = '<div class="kpis">';
+    data.forEach(c => {
+      const atualizadoFmt = c.saldo_atualizado_em
+        ? new Date(c.saldo_atualizado_em).toLocaleString('pt-BR')
+        : 'nunca atualizado';
+      html += `<div class="kpi ${c.status === 'erro' ? 'despesa' : 'saldo'}">
+        <div class="rotulo">${c.apelido} · ${c.nome_banco}</div>
+        <div class="valor">${c.saldo !== null ? formatarMoeda(c.saldo) : '—'}</div>
+        <div class="legenda">${rotuloStatus[c.status] || c.status} · atualizado em ${atualizadoFmt}</div>
+      </div>`;
+    });
+    html += '</div>';
+    lista.innerHTML = html;
+  }
+
+  // ================= FECHAMENTO MENSAL =================
+  const GRUPOS_DESPESA_ADMINISTRATIVA = ['Administrativas', 'Administrativo-Financeiro', 'Jurídico e Contábil'];
+  const GRUPOS_DESPESA_OPERACIONAL = ['Comercial e Marketing', 'Tecnologia', 'Logística', 'Pessoal'];
+
+  function prepararFechamento() {
+    const input = document.getElementById('fech-mes');
+    if (!input.value) {
+      const agora = new Date();
+      input.value = agora.getFullYear() + '-' + String(agora.getMonth() + 1).padStart(2, '0');
+    }
+    carregarHistoricoFechamentos();
+    gerarFechamento();
+  }
+
+  async function gerarFechamento() {
+    const mesInput = document.getElementById('fech-mes').value;
+    const msgBloqueio = document.getElementById('fech-msg-bloqueio');
+    const cardDre = document.getElementById('fech-card-dre');
+    const cardKpis = document.getElementById('fech-card-kpis');
+    msgBloqueio.innerHTML = '';
+    cardDre.style.display = 'none';
+    cardKpis.style.display = 'none';
+
+    if (!mesInput) { msgBloqueio.innerHTML = '<div class="msg erro">Escolha um mês.</div>'; return; }
+
+    const [ano, mes] = mesInput.split('-').map(Number);
+    const inicio = `${ano}-${String(mes).padStart(2, '0')}-01`;
+    const ultimoDia = new Date(ano, mes, 0).getDate();
+    const fim = `${ano}-${String(mes).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`;
+
+    const { data: lancamentosMes, error } = await sb.from('lancamentos')
+      .select('valor, categoria_id, status')
+      .gte('data_lancamento', inicio).lte('data_lancamento', fim)
+      .neq('status', 'rejeitado');
+
+    if (error) { msgBloqueio.innerHTML = `<div class="msg erro">Erro: ${error.message}</div>`; return; }
+
+    // Pendências que bloqueiam o fechamento: nada de "Não Classificado" ou
+    // aguardando revisão passa despercebido pro relatório final.
+    const pendentesRevisao = lancamentosMes.filter(l => l.status === 'pendente_revisao').length;
+    const naoClassificados = lancamentosMes.filter(l => resolverGrupo(l.categoria_id) === 'Não Classificado').length;
+
+    if (pendentesRevisao > 0 || naoClassificados > 0) {
+      const partes = [];
+      if (pendentesRevisao > 0) partes.push(`${pendentesRevisao} lançamento(s) pendente(s) de revisão`);
+      if (naoClassificados > 0) partes.push(`${naoClassificados} lançamento(s) sem categoria classificada`);
+      msgBloqueio.innerHTML = `<div class="msg erro">Fechamento bloqueado: ${partes.join(' e ')}. Revise no Dashboard antes de fechar o mês.</div>`;
+      return;
+    }
+
+    if (lancamentosMes.length === 0) {
+      msgBloqueio.innerHTML = '<div class="msg info">Nenhum lançamento confirmado neste mês.</div>';
+      return;
+    }
+
+    // Soma por grupo (nível 1 do plano de contas), ignorando transferência entre contas próprias
+    const somaPorGrupo = {};
+    lancamentosMes.forEach(l => {
+      const tipo = tipoDaCategoria(l.categoria_id);
+      if (tipo === 'transferencia') return;
+      const grupo = resolverGrupo(l.categoria_id);
+      somaPorGrupo[grupo] = (somaPorGrupo[grupo] || 0) + Number(l.valor);
+    });
+
+    const receitaBruta = somaPorGrupo['Receita Operacional'] || 0;
+    const impostos = somaPorGrupo['Tributário'] || 0;
+    const receitaLiquida = receitaBruta - impostos;
+    const custosDiretos = somaPorGrupo['Custo do Serviço/Produto'] || 0;
+    const margemBrutaValor = receitaLiquida - custosDiretos;
+    const despesasOperacionais = GRUPOS_DESPESA_OPERACIONAL.reduce((s, g) => s + (somaPorGrupo[g] || 0), 0);
+    const despesasAdministrativas = GRUPOS_DESPESA_ADMINISTRATIVA.reduce((s, g) => s + (somaPorGrupo[g] || 0), 0);
+    const ebitdaGerencial = margemBrutaValor - despesasOperacionais - despesasAdministrativas;
+    const outrasReceitas = (somaPorGrupo['Outras Entradas'] || 0) + (somaPorGrupo['Receita Não Operacional'] || 0);
+    const resultadoLiquido = ebitdaGerencial + outrasReceitas;
+    const capex = somaPorGrupo['Investimento (CAPEX)'] || 0;
+
+    const linhas = [
+      ['Receita Bruta', receitaBruta, false],
+      ['(−) Impostos s/ serviços', -impostos, false],
+      ['= Receita Líquida', receitaLiquida, true],
+      ['(−) Custos Diretos', -custosDiretos, false],
+      ['= Margem Bruta', margemBrutaValor, true],
+      ['(−) Despesas Operacionais', -despesasOperacionais, false],
+      ['(−) Despesas Administrativas', -despesasAdministrativas, false],
+      ['= EBITDA Gerencial', ebitdaGerencial, true],
+      ['(+) Outras Receitas (não operacionais)', outrasReceitas, false],
+      ['= Resultado Líquido do Mês', resultadoLiquido, true],
+    ];
+
+    let html = '<table><tbody>';
+    linhas.forEach(([label, valor, destaque]) => {
+      html += `<tr${destaque ? ' style="font-weight:600"' : ''}><td>${label}</td><td style="text-align:right">${formatarMoeda(valor)}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('fech-tabela-dre').innerHTML = html;
+    document.getElementById('fech-nota-capex').textContent = capex > 0
+      ? `Investimento (CAPEX) do mês: ${formatarMoeda(capex)} — não entra no resultado, fica registrado à parte.`
+      : '';
+    cardDre.style.display = '';
+
+    // KPIs — Margem Bruta e Margem Líquida vêm direto da DRE acima.
+    const margemBrutaPerc = receitaLiquida !== 0 ? (margemBrutaValor / receitaLiquida * 100) : 0;
+    const margemLiquidaPerc = receitaBruta !== 0 ? (resultadoLiquido / receitaBruta * 100) : 0;
+
+    // Posição de Caixa: estimativa via histórico acumulado (não é saldo real de banco ainda)
+    const { data: historico } = await sb.from('lancamentos')
+      .select('valor, categoria_id, status')
+      .lte('data_lancamento', fim)
+      .neq('status', 'rejeitado');
+    let caixaAcumulado = 0;
+    (historico || []).forEach(l => {
+      const tipo = tipoDaCategoria(l.categoria_id);
+      if (tipo === 'receita') caixaAcumulado += Number(l.valor);
+      else if (tipo === 'despesa') caixaAcumulado -= Number(l.valor);
+    });
+    const despesaTotalMes = custosDiretos + despesasOperacionais + despesasAdministrativas + impostos;
+    const posicaoCaixaMeses = despesaTotalMes > 0 ? (caixaAcumulado / despesaTotalMes) : null;
+
+    document.getElementById('fech-kpis').innerHTML = `
+      <div class="kpi saldo"><div class="rotulo">Margem Bruta</div><div class="valor">${margemBrutaPerc.toFixed(1)}%</div></div>
+      <div class="kpi ${margemLiquidaPerc >= 0 ? 'receita' : 'despesa'}"><div class="rotulo">Margem Líquida</div><div class="valor">${margemLiquidaPerc.toFixed(1)}%</div></div>
+      <div class="kpi manual"><div class="rotulo">Posição de Caixa</div><div class="valor">${posicaoCaixaMeses !== null ? posicaoCaixaMeses.toFixed(1) + ' meses' : '—'}</div></div>
+      <div class="kpi manual"><div class="rotulo">DSO (dias em aberto)</div><div class="valor">—</div></div>
+      <div class="kpi manual"><div class="rotulo">Receita Recorrente</div><div class="valor">—</div></div>
+    `;
+    cardKpis.style.display = '';
+    document.getElementById('fech-salvar-msg').innerHTML = '';
+
+    // Guarda tudo pra salvarFechamento() usar, sem precisar recalcular
+    ultimoFechamentoCalculado = {
+      ano, mes, receita_bruta: receitaBruta, impostos, receita_liquida: receitaLiquida,
+      custos_diretos: custosDiretos, margem_bruta_valor: margemBrutaValor,
+      despesas_operacionais: despesasOperacionais, despesas_administrativas: despesasAdministrativas,
+      ebitda_gerencial: ebitdaGerencial, outras_receitas: outrasReceitas, resultado_liquido: resultadoLiquido,
+      capex, margem_bruta_percentual: margemBrutaPerc, margem_liquida_percentual: margemLiquidaPerc,
+      posicao_caixa_meses: posicaoCaixaMeses,
+    };
+  }
+
+  async function salvarFechamento() {
+    const msgBox = document.getElementById('fech-salvar-msg');
+    if (!ultimoFechamentoCalculado) { msgBox.innerHTML = '<div class="msg erro">Gere o fechamento antes de salvar.</div>'; return; }
+
+    const { data: { user } } = await sb.auth.getUser();
+    const { error } = await sb.from('fechamentos_mensais')
+      .upsert({ ...ultimoFechamentoCalculado, fechado_por: user.email, fechado_em: new Date().toISOString() }, { onConflict: 'ano,mes' });
+
+    if (error) { msgBox.innerHTML = `<div class="msg erro">Erro ao salvar: ${error.message}</div>`; return; }
+    msgBox.innerHTML = '<div class="msg sucesso">Fechamento salvo no histórico.</div>';
+    await carregarHistoricoFechamentos();
+  }
+
+  async function carregarHistoricoFechamentos() {
+    const box = document.getElementById('fech-historico');
+    const { data, error } = await sb.from('fechamentos_mensais')
+      .select('ano, mes, receita_bruta, resultado_liquido, margem_liquida_percentual, fechado_em')
+      .order('ano', { ascending: false }).order('mes', { ascending: false });
+    if (error) { box.innerHTML = `<div class="vazio">Erro: ${error.message}</div>`; return; }
+    if (!data || data.length === 0) { box.innerHTML = '<div class="vazio">Nenhum mês fechado ainda. Gere e confirme o fechamento acima.</div>'; return; }
+
+    const nomesMeses = ['', 'Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    let html = '<table><thead><tr><th>Mês</th><th>Receita Bruta</th><th>Resultado Líquido</th><th>Margem Líquida</th><th>Fechado em</th></tr></thead><tbody>';
+    data.forEach(f => {
+      const fechadoFmt = new Date(f.fechado_em).toLocaleDateString('pt-BR');
+      const corResultado = f.resultado_liquido >= 0 ? 'var(--sucesso)' : 'var(--erro)';
+      html += `<tr><td>${nomesMeses[f.mes]}/${f.ano}</td><td>${formatarMoeda(f.receita_bruta)}</td>
+        <td style="color:${corResultado}">${formatarMoeda(f.resultado_liquido)}</td>
+        <td>${Number(f.margem_liquida_percentual).toFixed(1)}%</td><td>${fechadoFmt}</td></tr>`;
+    });
+    html += '</tbody></table>';
+    box.innerHTML = html;
+  }
+
+  // ================= CONTAS A PAGAR/RECEBER =================
+  let tipoCompromisso = 'pagar';
+  function selecionarTipoCompromisso(tipo) {
+    tipoCompromisso = tipo;
+    document.getElementById('cpr-btn-pagar').classList.toggle('selecionada', tipo === 'pagar');
+    document.getElementById('cpr-btn-receber').classList.toggle('selecionada', tipo === 'receber');
+    document.getElementById('cpr-label-fornecedor').textContent = tipo === 'pagar' ? 'Fornecedor' : 'Cliente';
+    montarSelectGrupo('cpr', tipo === 'pagar' ? 'despesa' : 'receita');
+  }
+
+  async function salvarCompromisso() {
+    const vencimento = document.getElementById('cpr-f-vencimento').value;
+    const valor = parseFloat(document.getElementById('cpr-f-valor').value);
+    const fornecedor_cliente = document.getElementById('cpr-f-fornecedor').value.trim();
+    const descricao = document.getElementById('cpr-f-descricao').value.trim();
+    const categoria_id = categoriaFinalSelecionada('cpr');
+    const msgBox = document.getElementById('cpr-form-msg');
+
+    if (!vencimento || !valor || valor <= 0 || !fornecedor_cliente || !descricao || !categoria_id) {
+      const rotuloFornecedor = tipoCompromisso === 'pagar' ? 'fornecedor' : 'cliente';
+      msgBox.innerHTML = `<div class="msg erro">Preencha vencimento, valor, ${rotuloFornecedor}, descrição e ao menos o grupo da categoria.</div>`;
+      return;
+    }
+
+    const btn = document.getElementById('cpr-btn-salvar');
+    btn.disabled = true; btn.textContent = 'Salvando…';
+
+    const { error } = await sb.from('contas_a_pagar_receber').insert({
+      tipo: tipoCompromisso, descricao, fornecedor_cliente, categoria_id, valor, data_vencimento: vencimento,
+    });
+
+    btn.disabled = false; btn.textContent = 'Registrar compromisso';
+    if (error) { msgBox.innerHTML = `<div class="msg erro">Erro ao salvar: ${error.message}</div>`; return; }
+
+    msgBox.innerHTML = '<div class="msg sucesso">Compromisso registrado.</div>';
+    document.getElementById('cpr-f-valor').value = '';
+    document.getElementById('cpr-f-fornecedor').value = '';
+    document.getElementById('cpr-f-descricao').value = '';
+    await carregarCompromissos();
+  }
+
+  function diasParaVencimento(dataVenc) {
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    const venc = new Date(dataVenc + 'T00:00:00');
+    return Math.round((venc - hoje) / 86400000);
+  }
+
+  function renderizarListaCompromissos(itens, containerId, mensagemVazia) {
+    const box = document.getElementById(containerId);
+    if (itens.length === 0) { box.innerHTML = `<div class="vazio">${mensagemVazia}</div>`; return; }
+
+    itens.sort((a, b) => a.data_vencimento.localeCompare(b.data_vencimento));
+
+    let html = '<table><thead><tr><th>Vencimento</th><th>Descrição</th><th>Fornecedor/Cliente</th><th>Valor</th><th></th></tr></thead><tbody>';
+    itens.forEach(i => {
+      const dias = diasParaVencimento(i.data_vencimento);
+      const dataFmt = new Date(i.data_vencimento + 'T00:00:00').toLocaleDateString('pt-BR');
+      let situacao = '';
+      if (dias < 0) situacao = ` <span class="tag divergente">Atrasado ${Math.abs(dias)}d</span>`;
+      else if (dias <= 7) situacao = ` <span class="tag pendente_revisao">Vence em ${dias}d</span>`;
+      html += `<tr><td>${dataFmt}${situacao}</td><td>${i.descricao}</td><td>${i.fornecedor_cliente}</td><td>${formatarMoeda(i.valor)}</td>
+        <td><button class="secundaria" onclick="confirmarCompromisso('${i.id}')">${i.tipo === 'pagar' ? 'Marcar pago' : 'Marcar recebido'}</button>
+        <button class="secundaria" onclick="cancelarCompromisso('${i.id}')">Cancelar</button></td></tr>`;
+    });
+    html += '</tbody></table>';
+    box.innerHTML = html;
+  }
+
+  async function carregarCompromissos() {
+    const { data, error } = await sb.from('contas_a_pagar_receber')
+      .select('id, tipo, descricao, fornecedor_cliente, valor, data_vencimento, status')
+      .eq('status', 'pendente')
+      .order('data_vencimento', { ascending: true });
+    if (error) {
+      document.getElementById('cpr-lista-pagar').innerHTML = `<div class="vazio">Erro: ${error.message}</div>`;
+      document.getElementById('cpr-lista-receber').innerHTML = '';
+      return;
+    }
+    atualizarBadgeAba('badge-registro', (data || []).length);
+    renderizarListaCompromissos((data || []).filter(i => i.tipo === 'pagar'), 'cpr-lista-pagar', 'Nada a pagar agendado por aqui.');
+    renderizarListaCompromissos((data || []).filter(i => i.tipo === 'receber'), 'cpr-lista-receber', 'Nada a receber agendado por aqui.');
+  }
+
+  async function confirmarCompromisso(id) {
+    const msgBox = document.getElementById('cpr-form-msg');
+    const { data: item, error: erroItem } = await sb.from('contas_a_pagar_receber').select('*').eq('id', id).single();
+    if (erroItem || !item) { msgBox.innerHTML = '<div class="msg erro">Não encontrei esse compromisso.</div>'; return; }
+
+    const acaoRotulo = item.tipo === 'pagar' ? 'Confirmar pagamento' : 'Confirmar recebimento';
+    const pergunta = `${acaoRotulo} de ${formatarMoeda(item.valor)} para "${item.descricao}" (${item.fornecedor_cliente})? Isso cria o lançamento de verdade e não pode ser desfeito por aqui.`;
+    if (!confirm(pergunta)) return;
+
+    const { data: { user } } = await sb.auth.getUser();
+    const { data: lancamento, error: erroLanc } = await sb.from('lancamentos').insert({
+      data_lancamento: item.data_vencimento, valor: item.valor, fornecedor: item.fornecedor_cliente,
+      descricao: item.descricao, categoria_id: item.categoria_id, origem: 'previsto', status: 'confirmado',
+      criado_por: 'usuario', revisado_por: user.email,
+    }).select().single();
+
+    if (erroLanc) { msgBox.innerHTML = `<div class="msg erro">Erro ao criar lançamento: ${erroLanc.message}</div>`; return; }
+
+    const { error: erroUpdate } = await sb.from('contas_a_pagar_receber')
+      .update({ status: 'pago', lancamento_id: lancamento.id }).eq('id', id);
+
+    if (erroUpdate) { msgBox.innerHTML = `<div class="msg erro">Lançamento criado, mas falhou ao atualizar o compromisso: ${erroUpdate.message}</div>`; return; }
+
+    await atualizarFornecedorConhecido(item.fornecedor_cliente, item.categoria_id);
+    msgBox.innerHTML = `<div class="msg sucesso">${item.tipo === 'pagar' ? 'Pagamento confirmado' : 'Recebimento confirmado'} e lançamento criado.</div>`;
+    await recarregarTudo();
+  }
+
+  async function cancelarCompromisso(id) {
+    const msgBox = document.getElementById('cpr-form-msg');
+    const { error } = await sb.from('contas_a_pagar_receber').update({ status: 'cancelado' }).eq('id', id);
+    if (error) { msgBox.innerHTML = `<div class="msg erro">Erro: ${error.message}</div>`; return; }
+    msgBox.innerHTML = '<div class="msg info">Compromisso cancelado.</div>';
+    await carregarCompromissos();
+  }
+
+  // ================= DESPESAS RECORRENTES =================
+  async function salvarRecorrente() {
+    const dia = parseInt(document.getElementById('rec-f-dia').value, 10);
+    const valor = parseFloat(document.getElementById('rec-f-valor').value);
+    const fornecedor = document.getElementById('rec-f-fornecedor').value.trim();
+    const descricao = document.getElementById('rec-f-descricao').value.trim();
+    const categoria_id = categoriaFinalSelecionada('rec');
+    const msgBox = document.getElementById('rec-form-msg');
+
+    if (!dia || dia < 1 || dia > 28 || !valor || valor <= 0 || !fornecedor || !descricao || !categoria_id) {
+      msgBox.innerHTML = '<div class="msg erro">Preencha dia (1 a 28), valor, fornecedor, descrição e ao menos o grupo da categoria.</div>';
+      return;
+    }
+
+    const btn = document.getElementById('rec-btn-salvar');
+    btn.disabled = true; btn.textContent = 'Salvando…';
+
+    const { error } = await sb.from('despesas_recorrentes').insert({
+      descricao, fornecedor, categoria_id, valor, dia_vencimento: dia,
+    });
+
+    btn.disabled = false; btn.textContent = 'Criar despesa recorrente';
+    if (error) { msgBox.innerHTML = `<div class="msg erro">Erro ao salvar: ${error.message}</div>`; return; }
+
+    msgBox.innerHTML = '<div class="msg sucesso">Despesa recorrente criada. O compromisso deste mês é gerado na próxima vez que o portal abrir.</div>';
+    document.getElementById('rec-f-valor').value = '';
+    document.getElementById('rec-f-fornecedor').value = '';
+    document.getElementById('rec-f-descricao').value = '';
+    document.getElementById('rec-f-dia').value = '';
+    await carregarRecorrentes();
+  }
+
+  async function carregarRecorrentes() {
+    const box = document.getElementById('rec-lista');
+    const { data, error } = await sb.from('despesas_recorrentes')
+      .select('id, descricao, fornecedor, valor, dia_vencimento, ativo')
+      .order('descricao', { ascending: true });
+    if (error) { box.innerHTML = `<div class="vazio">Erro: ${error.message}</div>`; return; }
+    if (!data || data.length === 0) { box.innerHTML = '<div class="vazio">Nenhum modelo cadastrado. Aluguel, assinatura, mensalidade — cadastre uma vez e o agente lembra todo mês.</div>'; return; }
+
+    let html = '<table><thead><tr><th>Descrição</th><th>Fornecedor</th><th>Dia</th><th>Valor</th><th>Status</th><th></th></tr></thead><tbody>';
+    data.forEach(r => {
+      html += `<tr><td>${r.descricao}</td><td>${r.fornecedor}</td><td>${r.dia_vencimento}</td><td>${formatarMoeda(r.valor)}</td>
+        <td><span class="tag ${r.ativo ? 'confirmado' : 'pendente_revisao'}">${r.ativo ? 'Ativa' : 'Pausada'}</span></td>
+        <td><button class="secundaria" onclick="pausarRecorrente('${r.id}', ${r.ativo})">${r.ativo ? 'Pausar' : 'Reativar'}</button></td></tr>`;
+    });
+    html += '</tbody></table>';
+    box.innerHTML = html;
+  }
+
+  async function pausarRecorrente(id, ativoAtual) {
+    const { error } = await sb.from('despesas_recorrentes').update({ ativo: !ativoAtual }).eq('id', id);
+    if (error) { document.getElementById('rec-form-msg').innerHTML = `<div class="msg erro">Erro: ${error.message}</div>`; return; }
+    await carregarRecorrentes();
+  }
+
+  // Roda uma vez por login: garante que todo modelo ativo já tem o compromisso
+  // do mês corrente gerado em contas_a_pagar_receber, sem duplicar.
+  async function gerarComprovantesRecorrentes() {
+    const hoje = new Date();
+    const anoMesAtual = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0');
+    const ultimoDiaMes = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0).getDate();
+
+    const { data: recorrentes } = await sb.from('despesas_recorrentes').select('*').eq('ativo', true);
+
+    for (const r of (recorrentes || [])) {
+      if (r.ultima_geracao_ano_mes === anoMesAtual) continue;
+
+      const dia = Math.min(r.dia_vencimento, ultimoDiaMes);
+      const vencimento = `${anoMesAtual}-${String(dia).padStart(2, '0')}`;
+
+      const { error } = await sb.from('contas_a_pagar_receber').insert({
+        tipo: 'pagar', descricao: r.descricao, fornecedor_cliente: r.fornecedor,
+        categoria_id: r.categoria_id, valor: r.valor, data_vencimento: vencimento,
+        despesa_recorrente_id: r.id,
+      });
+
+      if (!error) {
+        await sb.from('despesas_recorrentes').update({ ultima_geracao_ano_mes: anoMesAtual }).eq('id', r.id);
+      }
+    }
   }
 
   // ================= SESSÃO JÁ ATIVA =================
